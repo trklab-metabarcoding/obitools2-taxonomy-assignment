@@ -1,0 +1,17 @@
+---
+title: "Step 3c - assign taxonomy w/ local db"
+authors: "B.Littleford-Colquhoun & T.Divoll"
+output: html_document
+date: "2024-04-25"
+html_document:
+  df_print: paged
+  toc: true
+params:
+  todaydate = r'Sys.date()'
+  user =
+  project_code = 
+  seq_dates = []
+  output_path = 
+---
+
+

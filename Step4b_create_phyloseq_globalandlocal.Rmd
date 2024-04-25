@@ -1,0 +1,21 @@
+---
+title: "Step 4b - Phyloseq global and local"
+output: html_document
+date: "2024-04-25"
+html_document:
+  df_print: paged
+  toc: true
+params:
+  todaydate = r'Sys.date()'
+  user =
+  project_code = 
+  seq_dates = []
+  output_path = 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
