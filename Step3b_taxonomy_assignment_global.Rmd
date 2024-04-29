@@ -50,7 +50,7 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
-ecotag -d ${global_ref_db} -R ${ref_seq} ${cleaned_obitools_fasta} > ${DATE}_alluniq.clean.tag.fasta
+ecotag -d ${global_ref_db} -R ${ref_seq} ${cleaned_obitools_fasta} > ${DATE}_global_alluniq.clean.tag.fasta
 
 #Count number of sequences in your file
 obicount ${DATE}_alluniq.clean.tag.fasta --without-progress-bar
