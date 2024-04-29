@@ -1,34 +1,69 @@
 ---
-title: "Step3a_data_cleaning"
-authors: "B.Littleford-Colquhoun & T.Divoll"
+title: "Step 3a data cleaning"
+author: "B.Littleford-Colquhoun & T.Divoll"
 date: "2023-09-21"
 output: 
   html_document:
+  keep_md: TRUE
   df_print: paged
   toc: true
 params:
-  todaydate = r'Sys.date()'
-  user =
-  project_code = 
-  seq_dates = []
-  output_path = 
-  
+    #don't change these
+    todaydate: !r Sys.Date()
+    user: !r Sys.getenv("LOGNAME")
+    data_path: "/oscar/data/tkartzin/projects"
+    
+    #update these for your analysis
+    ##obitools params
+    min_read_length: 8     #-l in obigrep
+    max_read_length: 300   #-L in obigrep
+    clean_threshold: 0.05  #-r in obiclean
+    
+    project_code: "test"
+    seq_date_dirs: ["URI_20221013", "URI_20230519"]
 ---
+
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings)
+pacman::p_load(knitr, here, tidyr, dplyr)
+here::i_am("./Step3a_data_cleaning.Rmd")
+```
+
+```{r setup, include=FALSE}
+# set global chunk parameters here
+knitr::opts_chunk$set(echo = TRUE)
+Sys.setenv(user=params$user)
+Sys.setenv(todaydate=params$todaydate)
+Sys.setenv(min_read_length=params$min_read_length)
+Sys.setenv(max_read_length=params$max_read_length)
+Sys.setenv(clean_threshold=params$clean_threshold)
+```
+
+The date for the output path will correspond to this analysis date.
+```{r}
+output_path = file.path(params$data_path, params$project_code, "merged_runs", params$todaydate)
+dir.create(output_path)
+
+Sys.setenv(output_path=output_path)
 ```
 
 #### Collect all the final results from each sequencing run
-```{bash}
-source ~/.bash_profile
-conda activate /users/${user}/.conda/envs/obitools-env
-
-cp **/*/merged/*.fastq $output_path
+```{r}
+file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_date_dirs),
+           recursive=T,
+           pattern=("*.fastq"),
+           full.names=T)
+merged_results <- grep("results/merged", file_list, value = TRUE, fixed = TRUE)
 ```
 
-Now that you've inspected all the controls and potentially bad samples, and moved them out of the working folder, we rerun the merging steps and clean the final merged data set.
+Copy the collected files over to a dated folder in the project's 'merged_runs' folder.
+
+```{r}
+file.copy(from = merged_results, to = output_path)
+```
+
+Now that all the controls and potentially bad samples were removed in Step 1c, we rerun the merging steps and clean the final merged data set.
 
 #### Combine remaining sequences into one FASTA and dereplicate
 ```{bash}
@@ -72,12 +107,11 @@ obitab -o all.uniq.fasta > all.uniq.tab
 
 #### Filter out sequences by abundance and length
 Keep only the sequences having a count greater or equal to `min_read_length` and a length shorter than `max_read_length` bp (this should be changed depending on marker and filtering criteria)
+
 ```{bash}
 source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
-
-todaydate=$(date +%Y%m%d) # grab today's date from the system
 
 obigrep -l $min_read_length -L $max_read_length -p 'count>=2' all.uniq.fasta > ${todaydate}_all.uniq.fasta
 ```
@@ -90,8 +124,6 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
-todaydate=$(date +%Y%m%d)
-
 obiclean -s merged_sample -r $clean_threshold -H ${todaydate}_all.uniq.fasta > ${todaydate}_alluniq.clean.fasta
 ```
 #### Create a tabulated file to check the number of sequence reads in each sample
@@ -101,10 +133,7 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
-todaydate=$(date +%Y%m%d)
-
 obitab -o ${todaydate}_alluniq.clean.fasta > ${todaydate}_alluniq.clean.tab
-
 obicount ${todaydate}_alluniq.clean.fasta --without-progress-bar
 ```
 
