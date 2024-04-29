@@ -15,7 +15,7 @@ params:
     
     #update these for your analysis
     project_code: "test"
-    seq_date_dirs: ["URI_20221013", "URI_20230519"]
+    seq_run_name: ["URI_20221013", "URI_20230519"] #these are the folder names in the 'data/tkartzin/projects/<project_code>' dir
     
     ##obitools params
     min_read_length: 8     #-l in obigrep
@@ -50,7 +50,7 @@ Sys.setenv(output_path=output_path)
 
 #### Collect all the final results from each sequencing run
 ```{r}
-file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_date_dirs),
+file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_run_name),
            recursive=T,
            pattern=("*.fastq"),
            full.names=T)
@@ -58,7 +58,6 @@ merged_results <- grep("results/merged", file_list, value = TRUE, fixed = TRUE)
 ```
 
 Copy the collected files over to a dated folder in the project's 'merged_runs' folder.
-
 ```{r}
 file.copy(from = merged_results, to = output_path)
 ```
