@@ -14,13 +14,13 @@ params:
     data_path: "/oscar/data/tkartzin/projects"
     
     #update these for your analysis
+    project_code: "test"
+    seq_date_dirs: ["URI_20221013", "URI_20230519"]
+    
     ##obitools params
     min_read_length: 8     #-l in obigrep
     max_read_length: 300   #-L in obigrep
     clean_threshold: 0.05  #-r in obiclean
-    
-    project_code: "test"
-    seq_date_dirs: ["URI_20221013", "URI_20230519"]
 ---
 
 ```{r include=FALSE}
