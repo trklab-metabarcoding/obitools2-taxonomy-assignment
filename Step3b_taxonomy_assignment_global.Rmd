@@ -6,11 +6,17 @@ html_document:
   df_print: paged
   toc: true
 params:
-  todaydate = r'Sys.date()'
-  user =
-  project_code = 
-  seq_dates = []
-  output_path = 
+    #don't change these
+    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
+    user: !r Sys.getenv("LOGNAME")
+    data_path: "/oscar/data/tkartzin/projects"
+    ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
+  
+    #update these for your analysis
+    project_code: "test"
+    taxa_division: "PLN"
+    locus: "P6"
+    latest_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use
 ---
 This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs.
 
@@ -18,30 +24,33 @@ This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tut
 ## Only needed for knitr to render this notebook
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings)
-here::i_am("./Step3b_taxonomy_assignment.Rmd")
+here::i_am("Step3b_taxonomy_assignment_global.Rmd")
 ```
 
 #### Set up standard path variables
-Here, you want to enter the folder name that you created during Step2
-
+The following variables are created with the params you input in the YAML block above.
 ```{r}
-DATETIME <-params$datetime
-DATE<- str_extract(DATETIME, "[^_]+") #edit DATETIME to match the analysis folder name that was created when running step2, if not still saved in your R environment
-FILE_NAME<-sprintf("%s_alluniq.clean.fasta", DATE) #edit the YYYYMMDD to match the date of the file you created at the end of step2 in the "merged_path" directory.
+output_path <- file.path(params$data_path, params$project_code, "merged_runs", params$todaydate)
 
-cleaned_obitools_fasta<-file.path(here("all_results", FILE_NAME)) #should not need to edit this code as it pulls the date and file name you set in the previous 2 lines of code
+cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$todaydate))
 
-global_ref_db<-file.path("/oscar/data/tkartzin/global_ref_lib_plants/YYYYMMDD/YYYYMMDD_ecoPCRformat") #-d in ecotag; ecoPCR taxonomy Database name. Need to edit YYYYMMDD and name of taxonomy database to match that of the most recent global reference library you want to use.
+global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
+# -d in ecotag; ecoPCR taxonomy Database name.
 
-ref_seq<-file.path("/oscar/data/tkartzin/global_ref_lib_plants/YYYYMMDD/db_YYYYMMDD_P6set.fasta") #-R in ecotag; fasta file containing the reference sequences. Need to edit YYYYMMDD and name of fasta file to match that of the most recent global reference library you want to use. 
+ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("db_%s_%sset.fasta", params$latest_db_date, params$locus))
+# -R in ecotag; fasta file containing the reference sequences.
 ```
 
-```{r}
+```{r setup, include=FALSE}
 ## make environment variables that can be passed to bash code chunks
+# set global chunk parameters here
+knitr::opts_chunk$set(echo = TRUE)
 Sys.setenv(cleaned_obitools_fasta=cleaned_obitools_fasta)
 Sys.setenv(global_ref_db=global_ref_db)
 Sys.setenv(ref_seq=ref_seq)
-Sys.setenv(DATE=DATE)
+Sys.setenv(user=params$user)
+Sys.setenv(DATE=params$todaydate)
+Sys.setenv(output_path=output_path)
 ```
 
 #### Assign taxonomy to each sequence using the global reference library
@@ -53,7 +62,7 @@ cd $output_path
 ecotag -d ${global_ref_db} -R ${ref_seq} ${cleaned_obitools_fasta} > ${DATE}_global_alluniq.clean.tag.fasta
 
 #Count number of sequences in your file
-obicount ${DATE}_alluniq.clean.tag.fasta --without-progress-bar
+obicount ${DATE}_global_alluniq.clean.tag.fasta --without-progress-bar
 ```
 
 Un-useful attributes can be removed from sequences
@@ -67,11 +76,11 @@ obiannotate --delete-tag=scientific_name_by_db --delete-tag=obiclean_samplecount
   --delete-tag=obiclean_cluster --delete-tag=obiclean_internalcount \
   --delete-tag=obiclean_head --delete-tag=taxid_by_db --delete-tag=obiclean_headcount \
   --delete-tag=id_status --delete-tag=rank_by_db --delete-tag=order_name \
-  --delete-tag=order ${output_path}/${DATE}_alluniq.clean.tag.fasta > \
-  ${output_path}/${DATE}_alluniq.clean.tag.ann.fasta
+  --delete-tag=order ${output_path}/${DATE}_global_alluniq.clean.tag.fasta > \
+  ${output_path}/${DATE}_global_alluniq.clean.tag.ann.fasta
 
 #count number of sequences in file (should match above)
-obicount -a ${DATE}_alluniq.clean.tag.ann.fasta --without-progress-bar
+obicount -a ${DATE}_global_alluniq.clean.tag.ann.fasta --without-progress-bar
 ```
 
 ### Create output for use in phyloseq
@@ -81,5 +90,5 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
-obitab -o ${DATE}_alluniq.clean.tag.ann.fasta > ${DATE}_alluniq.clean.tag.ann.tab
+obitab -o ${DATE}_global_alluniq.clean.tag.ann.fasta > ${DATE}_global_alluniq.clean.tag.ann.tab
 ```
