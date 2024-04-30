@@ -15,7 +15,7 @@ params:
     #update these for your analysis
     project_code: "test"
     taxa_division: "PLN"
-    locus: "P6"
+    region_of_interest: "P6"
     latest_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use
 ---
 This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs.
@@ -24,7 +24,7 @@ This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tut
 ## Only needed for knitr to render this notebook
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings)
-here::i_am("Step3b_taxonomy_assignment_global.Rmd")
+here::i_am("./Step3b_taxonomy_assignment_global.Rmd")
 ```
 
 #### Set up standard path variables
@@ -37,7 +37,7 @@ cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta
 global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
 # -d in ecotag; ecoPCR taxonomy Database name.
 
-ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("db_%s_%sset.fasta", params$latest_db_date, params$locus))
+ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("db_%s_%sset.fasta", params$latest_db_date, params$region_of_interest))
 # -R in ecotag; fasta file containing the reference sequences.
 ```
 
