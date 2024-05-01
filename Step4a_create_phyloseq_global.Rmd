@@ -6,33 +6,85 @@ html_document:
   df_print: paged
   toc: true
 params:
-  todaydate = r'Sys.date()'
-  user =
-  project_code = 
-  seq_dates = []
-  output_path = 
+    #don't change these
+    todaydate: !r Sys.Date()
+    user: !r Sys.getenv("LOGNAME")
+    data_path: "/oscar/data/tkartzin/projects"
+    ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
+ 
+    #update these for your analysis
+    project_code: "test"
+    taxa_division: "PLN"
+    region_of_interest: "P6"
+    step_3_analysis_date: "20240501" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3
+    latest_global_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use 
 ---
 
+## Create a Phyloseq Object
+This notebook will use your data with taxonomy assigned from the latest global reference database to create a phyloseq object for downstream analyses. We make the assumption that this
 ```{r setup, include=FALSE}
+## Only needed for knitr to render this notebook
 knitr::opts_chunk$set(echo = TRUE)
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard) #this takes a few minutes
+here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
-## R Markdown
+## Read in data
+This code block will use the tabulated file created in Step 3 and a list of samples
+```{r}
+input_path <- file.path(params$data_path, params$project_code, "merged_runs", params$step_3_analysis_date)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3_analysis_date)), sep="\t", header=TRUE)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+#data_samples <- read.csv(file.path())
 ```
 
-## Including Plots
+## Filter data file to keep just what we need
+```{r}
+size <- dim(data_global) #number of rows and columns
+print(paste0("Number of rows in data: ", size[1]))
+print(paste0("Number of columns in data: ", size[2]))
 
-You can also embed plots, for example:
+best_id_col <- find_columns(data_global, starts_with("best_identity"))
+best_match_col <- find_columns(data_global, starts_with("best_match"))
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+data_global <- data_global %>% 
+  select(-contains("obiclean_status"))
+  
+global_keep <- data_global[which(data_global[,best_id_col]==1),]
+
+global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
+
+keep_rows <- nrow(global_keep)
+print(paste0("Number of rows kept: ", keep_rows))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Make a table to represent the counts of each OTU in each sample
+```{r}
+OTU_table <- global_keep[,grep("sample\\.", colnames(global_keep))]
+names(OTU_table) <- gsub(pattern = "sample.", replacement = "", x = names(OTU_table))
+rownames(OTU_table) <- sub("^", "P", rownames(OTU_table))
+```
+
+## Make a taxonomy table
+```{r}
+tax_table <- global_keep[,-grep("sample\\.", colnames(global_keep))]
+tax_table <- relocate(tax_table, id, definition, {{ best_id_col }}, {{ best_match_col }}, count, .after = last_col())
+tax_table2<- as.matrix(tax_table)
+rownames(tax_table2) <- sub("^", "P", rownames(tax_table2))
+```
+
+rownames(dat_samples) <- dat_samples$SampleID
+
+OTU <- otu_table(OTU_table, taxa_are_rows = TRUE)
+TAX = tax_table(tax_table2)
+samples = sample_data(dat_samples)
+FJ_diet_global_20230824 <- phyloseq(OTU, TAX, samples)
+FJ_diet_global_20230824
+
+saveRDS(FJ_diet_global_20230824, here("FJ_diet_global_20230824.rds"))
+```
+
+

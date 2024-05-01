@@ -9,7 +9,7 @@ output:
   toc: true
 params:
     #don't change these
-    todaydate: !r Sys.Date()
+    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
     user: !r Sys.getenv("LOGNAME")
     data_path: "/oscar/data/tkartzin/projects"
     
@@ -54,7 +54,7 @@ file_list <- list.files(path=file.path(params$data_path, params$project_code, pa
            recursive=T,
            pattern=("*.fastq"),
            full.names=T)
-merged_data <- grep("results/id_data", file_list, value = TRUE, fixed = TRUE)
+merged_data <- grep("id_data", file_list, value = TRUE, fixed = TRUE)
 ```
 
 Copy the collected files over to a dated folder in the project's 'merged_runs' folder.
