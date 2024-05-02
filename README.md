@@ -16,7 +16,7 @@ The steps included in this repository:
 
 5. create phyloseq object using taxonomy assignment from **global and local** reference libraries (step 4b)
 
-The schematic below shows the entire bioinformatic pipeline for DNA metabarcoding data, but the steps included in this repository are shown in the dark grey box. 
+The schematic below shows the entire bioinformatic pipeline for DNA metabarcoding data, but the steps included in this repository are shown in the dark grey box. These steps use output created in steps 1 and 2. 
 
 ![pipeline](images/bioinformatic_pipeline_overview2.png)
 
