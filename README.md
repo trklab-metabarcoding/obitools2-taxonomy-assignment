@@ -18,7 +18,7 @@ The steps included in this repository:
 
 The schematic below shows the entire bioinformatic pipeline for DNA metabarcoding data, but the steps included in this repository are shown in the dark grey box. 
 
-![Rproj example](images/bioinformatic_pipeline_overview2.png)
+![pipeline](images/bioinformatic_pipeline_overview2.png)
 
 
 ## Connecting to Oscar
@@ -32,8 +32,6 @@ The schematic below shows the entire bioinformatic pipeline for DNA metabarcodin
 - [ ] Also in the terminal: `cd obitools2-preprocessing-pipeline`
 - [ ] In the Files panes of RStudio, use the menu at the top right to make sure you are also at the same path.
 - [ ] Double-click the `.obitools2-pipeline.Rproj` file to set the project working directory. All of the notebooks are built from this working directory.
-
-![Rproj example](images/Rproj-example.png)
 
 
 ## Prepare your sample metadata
