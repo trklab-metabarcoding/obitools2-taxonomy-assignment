@@ -1,5 +1,6 @@
 ---
 title: "Step 4a - Phyloseq global"
+authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
 output: html_document
 date: "2024-04-25"
 html_document:
@@ -17,7 +18,6 @@ params:
     taxa_division: "PLN"
     region_of_interest: "P6"
     step_3_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3
-   ## latest_global_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use 
     metadata_file: "test_phyloseq_metadata.csv"
 ---
 

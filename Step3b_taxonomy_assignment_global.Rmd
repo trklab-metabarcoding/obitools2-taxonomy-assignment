@@ -57,6 +57,7 @@ Sys.setenv(output_path=output_path)
 ```{bash}
 source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
+mkdir -p $output_path
 cd $output_path
 
 ecotag -d ${global_ref_db} -R ${ref_seq} ${cleaned_obitools_fasta} > ${DATE}_global_alluniq.clean.tag.fasta

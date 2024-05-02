@@ -1,14 +1,14 @@
 ---
 title: "Step 4b - Phyloseq global and local"
+authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
 output: html_document
 date: "2024-04-25"
 html_document:
   df_print: paged
   toc: true
 params:
-params:
     #don't change these
-    todaydate: !r Sys.Date()
+    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
     user: !r Sys.getenv("LOGNAME")
     data_path: "/oscar/data/tkartzin/projects"
     global_ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
@@ -18,8 +18,8 @@ params:
     project_code: "test"
     taxa_division: "PLN"
     region_of_interest: "P6"
-    latest_global_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use
-    latest_local_db_date: ""
+    step_3_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3
+    metadata_file: "test_phyloseq_metadata.csv"
 ---
 
 ## Create a Phyloseq Object
@@ -31,4 +31,16 @@ knitr::opts_chunk$set(echo = TRUE)
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales)
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
+```
+
+## Read in data
+This code block will use the tabulated file created in Step 3 and a list of samples
+```{r}
+input_path <- file.path(params$data_path, params$project_code, "merged_runs", params$step_3_analysis_date)
+
+data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3_analysis_date)), sep="\t", header=TRUE)
+
+data_local <- read.csv(file.path(input_path, sprintf("%s_local_alluniq.clean.tag.ann.tab", params$step_3_analysis_date)), sep="\t", header=TRUE)
+
+data_samples <- read.csv(file.path(input_path, params$metadata_file))
 ```

@@ -14,14 +14,15 @@ params:
     ref_lib_path: "/oscar/data/tkartzin/local_ref_lib"
   
     #update these for your analysis
-    project_code: "YNP"
+    reference_lib_project_code: "YNP"
+    data_project_code: "test"
     taxa_division: "PLN"
     locus: "trnL"
     region_of_interest: "P6"
     latest_db_date: "20240430" #look in `ref_lib_path/project_code/locus/region_of_interest` for the most recent local reference library you want to use
 ---
 
-This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs.
+This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs. We assume that you are running this notebook on the same day that you ran Step 3a.
 
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
@@ -33,16 +34,14 @@ here::i_am("./Step3c_taxonomy_assignment_local.Rmd")
 #### Set up standard path variables
 The following variables are created with the params you input in the YAML block above.
 ```{r}
-output_path <- file.path(params$data_path, params$project_code, "merged_runs", params$todaydate)
+output_path <- file.path(params$data_path, params$data_project_code, "merged_runs", params$todaydate)
 
 cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$todaydate))
 
-local_ref_db <- file.path(params$ref_lib_path, params$project_code, params$locus, params$region_of_interest, params$latest_db_date, sprintf("formatdb_%s_%s", params$project_code, params$locus), sprintf("%s_%s_%s", params$project_code, params$locus, params$latest_db_date)) 
+local_ref_db <- file.path(params$ref_lib_path, params$reference_lib_project_code, params$locus, params$region_of_interest, params$latest_db_date, sprintf("formatdb_%s_%s", params$reference_lib_project_code, params$locus), sprintf("%s_%s_%s", params$reference_lib_project_code, params$locus, params$latest_db_date)) 
 #-d in ecotag; ecoPCR taxonomy Database name.
 
-file.copy(file.path(params$ref_lib_path, params$project_code, params$locus, params$region_of_interest, params$latest_db_date, sprintf("%s_TAXO", params$latest_db_date)), file.path(params$ref_lib_path, params$project_code, params$locus, params$region_of_interest, params$latest_db_date, sprintf("formatdb_%s_%s", params$project_code, params$locus)), recursive = TRUE)
-
-ref_seq <- file.path(params$ref_lib_path, params$project_code, params$locus, params$region_of_interest, params$latest_db_date, sprintf("%s%s_completeDB_%s.fasta", params$project_code, params$region_of_interest, params$latest_db_date)) 
+ref_seq <- file.path(params$ref_lib_path, params$reference_lib_project_code, params$locus, params$region_of_interest, params$latest_db_date, sprintf("%s%s_completeDB_%s.fasta", params$reference_lib_project_code, params$region_of_interest, params$latest_db_date)) 
 #-R in ecotag; fasta file containing the reference sequences.
 ```
 
@@ -62,6 +61,7 @@ Sys.setenv(output_path=output_path)
 ```{bash}
 source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
+mkdir -p $output_path
 cd $output_path
 
 ecotag -d ${local_ref_db} -R ${ref_seq} ${cleaned_obitools_fasta} > ${DATE}_local_alluniq.clean.tag.fasta
