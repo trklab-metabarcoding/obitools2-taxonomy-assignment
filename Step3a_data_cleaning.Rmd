@@ -16,6 +16,7 @@ params:
     #update these for your analysis
     project_code: "test"
     seq_run_name: ["URI_20221013", "URI_20230519"] #these are the folder names in the 'data/tkartzin/projects/<project_code>' dir
+    step_1_analysis_date: ["20240502", "20240430"] #make sure these dates are in the same order as the appropriate `seq_run_name` folders
     
     ##obitools params
     min_read_length: 8     #-l in obigrep
@@ -26,7 +27,7 @@ params:
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, janitor)
+pacman::p_load(knitr, here, tidyr, dplyr, janitor, stringr)
 here::i_am("./Step3a_data_cleaning.Rmd")
 ```
 
@@ -50,7 +51,7 @@ Sys.setenv(output_path=output_path)
 
 #### Collect all the final results from each sequencing run
 ```{r}
-file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_run_name),
+file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_run_name, params$step_1_analysis_date),
            recursive=T,
            pattern=("*.fastq"),
            full.names=T)

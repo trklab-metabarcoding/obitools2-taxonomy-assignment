@@ -7,7 +7,7 @@ html_document:
   toc: true
 params:
     #don't change these
-    todaydate: !r Sys.Date()
+    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
     user: !r Sys.getenv("LOGNAME")
     data_path: "/oscar/data/tkartzin/projects"
     ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
@@ -16,8 +16,9 @@ params:
     project_code: "test"
     taxa_division: "PLN"
     region_of_interest: "P6"
-    step_3_analysis_date: "20240501" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3
-    latest_global_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use 
+    step_3_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3
+   ## latest_global_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use 
+    metadata_file: "test_phyloseq_metadata.csv"
 ---
 
 ## Create a Phyloseq Object
@@ -38,7 +39,7 @@ input_path <- file.path(params$data_path, params$project_code, "merged_runs", pa
 
 data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3_analysis_date)), sep="\t", header=TRUE)
 
-#data_samples <- read.csv(file.path())
+data_samples <- read.csv(file.path(input_path, params$metadata_file))
 ```
 
 ## Filter data file to keep just what we need
@@ -72,19 +73,26 @@ rownames(OTU_table) <- sub("^", "P", rownames(OTU_table))
 ```{r}
 tax_table <- global_keep[,-grep("sample\\.", colnames(global_keep))]
 tax_table <- relocate(tax_table, id, definition, {{ best_id_col }}, {{ best_match_col }}, count, .after = last_col())
-tax_table2<- as.matrix(tax_table)
+tax_table2 <- as.matrix(tax_table)
 rownames(tax_table2) <- sub("^", "P", rownames(tax_table2))
 ```
 
-rownames(dat_samples) <- dat_samples$SampleID
-
+## Do some cleaning before making the final Phyloseq object
+```{r}
+rownames(data_samples) <- data_samples$SampleID
+samples <- sample_data(data_samples)
 OTU <- otu_table(OTU_table, taxa_are_rows = TRUE)
-TAX = tax_table(tax_table2)
-samples = sample_data(dat_samples)
-FJ_diet_global_20230824 <- phyloseq(OTU, TAX, samples)
-FJ_diet_global_20230824
+TAX <- tax_table(tax_table2)
 
-saveRDS(FJ_diet_global_20230824, here("FJ_diet_global_20230824.rds"))
+if (identical(sample_names(OTU), sample_names(samples))){
+  print("Your samples are in the right order. Proceed with making your final RDS file!")
+} else {
+  print("Something is out of order. Make sure the samples in your metadata file match the order in your OTU. Please fix and rerun this notebook.")
+}
 ```
 
-
+## Create the final Phyloseq object
+```{r}
+rds_file<- phyloseq(OTU, TAX, samples) 
+saveRDS(rds_file, file.path(input_path, paste0(params$project_code, "_diet_global_", params$todaydate, ".rds")))
+```

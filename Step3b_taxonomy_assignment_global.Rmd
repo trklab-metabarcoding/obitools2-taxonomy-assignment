@@ -18,7 +18,7 @@ params:
     region_of_interest: "P6"
     latest_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use
 ---
-This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs.
+This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs. We assume that you are running this notebook on the same day that you ran Step 3a.
 
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
