@@ -46,6 +46,8 @@ The first step is to update all of the `params` in the YAML header of the first 
 
 Sequence reads are then dereplicated, filtered based on number and length, and PCR/sequencing errors are removed. 
 
+**Note:** By this point in the pipeline, all "bad" and control samples should have been moved to a different folder and should therefore not appear in step 3. Make sure they are absent. 
+
 ### Step 3b. `Step3b_taxonomy_assignment_global.Rmd`
 This step assigns taxonomy to the cleaned sequences from step 3a using a global reference library. The first code chunk in this notebook requires you to specify the global reference library you would like to use to do this. 
 
