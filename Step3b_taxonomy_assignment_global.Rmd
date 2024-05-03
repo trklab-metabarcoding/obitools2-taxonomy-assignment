@@ -18,7 +18,7 @@ params:
     region_of_interest: "P6"
     latest_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use
 ---
-This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs.
+This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs. We assume that you are running this notebook on the same day that you ran Step 3a.
 
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
@@ -30,14 +30,14 @@ here::i_am("./Step3b_taxonomy_assignment_global.Rmd")
 #### Set up standard path variables
 The following variables are created with the params you input in the YAML block above.
 ```{r}
-output_path <- file.path(params$data_path, params$project_code, "merged_runs", params$todaydate)
+output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$todaydate, params$user))
 
 cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$todaydate))
 
-global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
+global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$region_of_interest, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
 # -d in ecotag; ecoPCR taxonomy Database name.
 
-ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("db_%s_%sset.fasta", params$latest_db_date, params$region_of_interest))
+ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$region_of_interest, params$latest_db_date, sprintf("db_%s_%sset.fasta", params$latest_db_date, params$region_of_interest))
 # -R in ecotag; fasta file containing the reference sequences.
 ```
 
@@ -57,6 +57,7 @@ Sys.setenv(output_path=output_path)
 ```{bash}
 source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
+mkdir -p $output_path
 cd $output_path
 
 ecotag -d ${global_ref_db} -R ${ref_seq} ${cleaned_obitools_fasta} > ${DATE}_global_alluniq.clean.tag.fasta
