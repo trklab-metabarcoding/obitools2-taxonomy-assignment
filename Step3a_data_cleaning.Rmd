@@ -16,7 +16,7 @@ params:
     #update these for your analysis
     project_code: "test"
     seq_run_name: ["URI_20221013", "URI_20230519"] #these are the folder names in the 'data/tkartzin/projects/<project_code>' dir
-    step_1_analysis_date: ["20240502", "20240430"] #make sure these dates are in the same order as the appropriate `seq_run_name` folders
+    step_1_analysis_date: ["20240502_tdivoll", "20240430_tdivoll"] #make sure these dates are in the same order as the appropriate `seq_run_name` folders
     
     ##obitools params
     min_read_length: 8     #-l in obigrep
@@ -43,7 +43,7 @@ Sys.setenv(clean_threshold=params$clean_threshold)
 
 The date for the output path will correspond to this analysis date.
 ```{r}
-output_path = file.path(params$data_path, params$project_code, "merged_runs", params$todaydate)
+output_path = file.path(params$data_path, params$project_code, "merged_runs", params$todaydate, params$user)
 dir.create(output_path)
 
 Sys.setenv(output_path=output_path)

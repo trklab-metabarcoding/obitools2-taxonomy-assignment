@@ -30,14 +30,14 @@ here::i_am("./Step3b_taxonomy_assignment_global.Rmd")
 #### Set up standard path variables
 The following variables are created with the params you input in the YAML block above.
 ```{r}
-output_path <- file.path(params$data_path, params$project_code, "merged_runs", params$todaydate)
+output_path <- file.path(params$data_path, params$project_code, "merged_runs", params$todaydate, params$user)
 
 cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$todaydate))
 
-global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
+global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$region_of_interest, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
 # -d in ecotag; ecoPCR taxonomy Database name.
 
-ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$latest_db_date, sprintf("db_%s_%sset.fasta", params$latest_db_date, params$region_of_interest))
+ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$region_of_interest, params$latest_db_date, sprintf("db_%s_%sset.fasta", params$latest_db_date, params$region_of_interest))
 # -R in ecotag; fasta file containing the reference sequences.
 ```
 
