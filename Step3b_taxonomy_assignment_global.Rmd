@@ -30,7 +30,7 @@ here::i_am("./Step3b_taxonomy_assignment_global.Rmd")
 #### Set up standard path variables
 The following variables are created with the params you input in the YAML block above.
 ```{r}
-output_path <- file.path(params$data_path, params$project_code, "merged_runs", params$todaydate, params$user)
+output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$todaydate, params$user))
 
 cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$todaydate))
 

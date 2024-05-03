@@ -35,14 +35,14 @@ here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ## Read in data
 This code block will use the tabulated file created in Step 3 and a list of samples
 ```{r}
-input_path <- file.path(params$data_path, params$project_code, "merged_runs", params$step_3_analysis_date, params$user)
+input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3_analysis_date, params$user))
 
 data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3_analysis_date)), sep="\t", header=TRUE)
 
 data_samples <- read.csv(params$metadata_file)
 ```
 
-## Filter data file to keep just what we need
+### Filter the data to only keep 100% matches
 ```{r}
 size <- dim(data_global) #number of rows and columns
 print(paste0("Number of rows in data: ", size[1]))

@@ -18,8 +18,9 @@ params:
     project_code: "test"
     taxa_division: "PLN"
     region_of_interest: "P6"
-    step_3_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3
+    step_3_analysis_date: "20240502" #enter the date when you ran Step 3 `date_user`
     metadata_file: "test_phyloseq_metadata.csv"
+    RRA_threshold: 0.05 # 5%
 ---
 
 ## Create a Phyloseq Object
@@ -29,18 +30,136 @@ This notebook will use your data with taxonomy assigned from the latest global r
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales)
+pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard)
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
 ## Read in data
 This code block will use the tabulated file created in Step 3 and a list of samples
 ```{r}
-input_path <- file.path(params$data_path, params$project_code, "merged_runs", params$step_3_analysis_date, params$user)
+input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3_analysis_date, params$user))
 
 data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3_analysis_date)), sep="\t", header=TRUE)
 
 data_local <- read.csv(file.path(input_path, sprintf("%s_local_alluniq.clean.tag.ann.tab", params$step_3_analysis_date)), sep="\t", header=TRUE)
 
-data_samples <- read.csv(file.path(input_path, params$metadata_file))
+data_samples <- read.csv(params$metadata_file)
 ```
+
+### Collect so insights on the shape of data
+Are there the same number of sequences in your local and global files?
+```{r}
+if (length(which(data_local$id != data_global$id)) == 0){
+  print("Your files have the same number of sequences.")
+} else {
+  print("There is a mismatch in file lengths. Please check inputs and rerun Step 3.")
+}
+```
+
+### Rename the default column X to SampleID
+```{r}
+colnames(data_samples)[colnames(data_samples) == "X"] ="SampleID"
+```
+
+### Filter the data to only keep 100% matches in the local set
+```{r}
+size <- dim(data_local) #number of rows and columns
+print(paste0("Number of rows in local data: ", size[1]))
+print(paste0("Number of columns in local data: ", size[2]))
+
+best_id_col_local <- find_columns(data_local, starts_with("best_identity"))
+
+data_local <- data_local %>% 
+  select(-contains("obiclean_status"))
+
+local_keep <- data_local[which(data_local[,best_id_col_local]==1),]
+
+local_keep_rows <- nrow(local_keep)
+print(paste0("Number of local rows kept: ", local_keep_rows))
+```
+
+
+### Filter the data to only keep 100% matches in the global set
+Global only keeps perfect matches if they are not already present in the local set of matches
+```{r}
+size <- dim(data_global) #number of rows and columns
+print(paste0("Number of rows in global data: ", size[1]))
+print(paste0("Number of columns in global data: ", size[2]))
+
+best_id_col <- find_columns(data_global, starts_with("best_identity"))
+best_match_col <- find_columns(data_global, starts_with("best_match"))
+
+data_global <- data_global %>% 
+  select(-contains("obiclean_status"))
+  
+global_keep <- data_global[intersect(which(data_global[,best_id_col]==1), which(data_local[,best_id_col_local]!=1)),]
+
+global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
+
+print(paste0("Number of global rows kept: ", nrow(global_keep)))
+```
+
+### Combine the local and global datasets
+Combine local and additional global libraries into a database called "keep" for exploratory analyses
+```{r}
+global_keepKEEP <- global_keep
+names(global_keepKEEP) <- names(local_keep)
+keep <- rbind(local_keep, global_keepKEEP)
+```
+
+### Explore the distribution of sequences
+Find out distribution of the sequences you toss both locally and globally (i.e., do some match multiple species perfectly, or anything new in GenBank?)
+
+```{r}
+local_global_toss <- data_local[which(data_local$id %in%keep$id==F),] #tells you how many taxa didn't have 100% matches 
+
+print(paste0("The number of sequences not matching at 100%: ", dim(local_global_toss)[1]))
+```
+
+### Look at the seqs with highest read counts for matches >98%
+```{r}
+local_global_toss <- local_global_toss[order(local_global_toss$count,decreasing=T),]
+head(local_global_toss)
+# may be a couple of taxa we should look at that have 1-2 matches at ~98% match with high read count 
+```
+### Look at a histogram of %match < 1 for the tossed samples
+```{r}
+hist(local_global_toss[,best_id_col_local])
+```
+
+### Count up 100% matches in each family with the local library
+```{r}
+local_keep %>% count(family_name, sort = TRUE)
+```
+### Count up 100% matches in each genera with the local library
+```{r}
+local_keep %>% count(genus_name, sort = TRUE)
+```
+### Count up 100% matches in each family with the global library
+```{r}
+global_keep_families <- global_keep %>% count(family_name, sort = TRUE)
+global_keep_families
+write.csv(global_keep_families, file.path(input_path, "global_keep_familes.csv"))
+```
+### Count up 100% matches in each genera with the local library
+```{r}
+global_keep_genera <- global_keep %>% count(genus_name, sort = TRUE)
+global_keep_genera
+write.csv(global_keep_genera, file.path(input_path, "global_keep_genera.csv"))
+```
+
+## Inspect the 90-99% matches
+
+## Generate summary statistics for publication
+
+## Sample-wise Relative Read Abundance (RRA)
+
+## Disproportionality
+
+## Summarize local and non-trace global
+
+## Summarize sample sizes
+
+## Save outputs and generate Phyloseq object
+
+
