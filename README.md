@@ -2,7 +2,7 @@
 
 This repository contains the code for assigning taxonomy to DNA metabarcoding data with OBITools v.1.2.12 on Brown's high-performance cluster, OSCAR. 
 
-**Note:** Taxonomic assignment steps are run all samples that a user wants to include in final analyses (i.e. this may include samples from multiple sequencing runs). 
+**Note:** Taxonomic assignment steps are run on all samples that a user wants to include in final analyses (i.e. this may include samples from multiple sequencing runs). 
 
 The steps included in this repository:
 
@@ -31,7 +31,7 @@ The schematic below shows the entire bioinformatic pipeline for DNA metabarcodin
 - [ ] In that terminal `git clone https://github.com/trklab-metabarcoding/obitools2-taxonomy-assignment.git`
 - [ ] Also in the terminal: `cd obitools2-taxonomy-assignment`
 - [ ] In the Files panes of RStudio, use the menu at the top right to make sure you are also at the same path.
-- [ ] Double-click the `.obitools2-pipeline.Rproj` file to set the project working directory. All of the notebooks are built from this working directory.
+- [ ] Double-click the `.obitools2-taxonomy-assignment.Rproj` file to set the project working directory. All of the notebooks are built from this working directory.
 
 
 ## Prepare your sample metadata
@@ -74,4 +74,4 @@ The final phyloseq object will include: an ASV table (samples are columns, taxa 
 
 
 ## Output
-At the end of each step, the output will be moved to `/oscar/data/tkartzin/projects/<project code>/merged_runs/YYYYMMDD`
+At the end of each step, the output will be moved to `/oscar/data/tkartzin/projects/<project code>/merged_runs/YYYYMMDD<user_name>`
