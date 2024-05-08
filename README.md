@@ -14,7 +14,7 @@ The steps included in this repository:
 
 4. create phyloseq object using taxonomy assignment from **global** reference library (step 4a)
 
-5. create phyloseq object using taxonomy assignment from **global and local** reference libraries (step 4b)
+5. optional step: create phyloseq object using taxonomy assignment from **global and local** reference libraries (step 4b)
 
 The schematic below shows the entire bioinformatic pipeline for DNA metabarcoding data, but the steps included in this repository are shown in the dark grey box. These steps use output created in steps 1 and 2. 
 
@@ -28,8 +28,8 @@ The schematic below shows the entire bioinformatic pipeline for DNA metabarcodin
 - [ ] Under Modules put `git miniconda3`.
 - [ ] Launch the session once it has been allocated. 
 - [ ] Go to the terminal pane in RStudio and `cd /oscar/data/tkartzin/<your folder>` (replace <your folder> with your user folder here)
-- [ ] In that terminal `git clone https://github.com/trklab-metabarcoding/obitools2-preprocessing-pipeline.git`
-- [ ] Also in the terminal: `cd obitools2-preprocessing-pipeline`
+- [ ] In that terminal `git clone https://github.com/trklab-metabarcoding/obitools2-taxonomy-assignment.git`
+- [ ] Also in the terminal: `cd obitools2-taxonomy-assignment`
 - [ ] In the Files panes of RStudio, use the menu at the top right to make sure you are also at the same path.
 - [ ] Double-click the `.obitools2-pipeline.Rproj` file to set the project working directory. All of the notebooks are built from this working directory.
 
