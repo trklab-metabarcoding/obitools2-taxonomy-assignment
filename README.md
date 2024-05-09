@@ -74,4 +74,4 @@ The final phyloseq object will include: an ASV table (samples are columns, taxa 
 
 
 ## Output
-At the end of each step, the output will be moved to `/oscar/data/tkartzin/projects/<project code>/merged_runs/YYYYMMDD<user_name>`
+At the end of each step, the output will be moved to `/oscar/data/tkartzin/projects/<project code>/merged_runs/YYYYMMDD_<user_name>`
