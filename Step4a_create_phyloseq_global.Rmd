@@ -19,6 +19,7 @@ params:
     region_of_interest: "P6"
     step_3_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3
     metadata_file: "test_phyloseq_metadata.csv"
+    percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
 ---
 
 ## Create a Phyloseq Object

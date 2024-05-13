@@ -66,7 +66,9 @@ file.copy(from = merged_data, to = output_path)
 Check for duplicate sample names. Expect a message like this: "No duplicate combinations found of: sample_names". If you get output here, perhaps you have run the sample before? 
 ```{r }
 files <- list.files(path=output_path, pattern="\\.fastq$")
-samples <- as.data.frame(str_extract(files, "[^_]+"))
+samples_in_files <- as.data.frame(str_extract(files, "[^_]+"))
+samples_in_metadata <-  #exclude and remove non-matching
+
 colnames(samples) <- "sample_names"
 duplicates <- get_dupes(samples, sample_names)
 ```
@@ -98,10 +100,16 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
+##### test with head & tail vs. two separate lines
+
 # get the counting statistics on the ‘count’ attribute
 {
 obistat -c count all.uniq.fasta --without-progress-bar | sort -nk1 | head -20 | column -t 
-} | tee -a seq_count_table_no_controls.txt
+} | tee -a seq_count_table_head_no_controls.txt
+
+{
+obistat -c count all.uniq.fasta --without-progress-bar | sort -nk1 | tail -20 | column -t 
+} | tee -a seq_count_table_tail_no_controls.txt
 ```
 
 #### Create a tabulated file for counts per sequence read

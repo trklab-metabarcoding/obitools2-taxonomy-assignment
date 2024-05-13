@@ -20,6 +20,7 @@ params:
     region_of_interest: "P6"
     step_3_analysis_date: "20240502" #enter the date when you ran Step 3 `date_user`
     metadata_file: "test_phyloseq_metadata.csv"
+    percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
     RRA_threshold: 0.05 # 5%
 ---
 
