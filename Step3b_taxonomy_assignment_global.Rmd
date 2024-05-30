@@ -7,12 +7,13 @@ html_document:
   toc: true
 params:
     #don't change these
-    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
     user: !r Sys.getenv("LOGNAME")
     data_path: "/oscar/data/tkartzin/projects"
     ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
   
     #update these for your analysis
+    step_3a_analysis_date: "20240529" #YYYYMMDD
+    step_3b_analysis_date: "20240530" #YYYYMMDD
     project_code: "test"
     taxa_division: "PLN"
     region_of_interest: "P6"
@@ -30,9 +31,9 @@ here::i_am("./Step3b_taxonomy_assignment_global.Rmd")
 #### Set up standard path variables
 The following variables are created with the params you input in the YAML block above.
 ```{r}
-output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$todaydate, params$user))
+output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3a_analysis_date, params$user))
 
-cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$todaydate))
+cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$step_3a_analysis_date))
 
 global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$region_of_interest, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
 # -d in ecotag; ecoPCR taxonomy Database name.
@@ -49,7 +50,7 @@ Sys.setenv(cleaned_obitools_fasta=cleaned_obitools_fasta)
 Sys.setenv(global_ref_db=global_ref_db)
 Sys.setenv(ref_seq=ref_seq)
 Sys.setenv(user=params$user)
-Sys.setenv(DATE=params$todaydate)
+Sys.setenv(DATE=params$step_3b_analysis_date)
 Sys.setenv(output_path=output_path)
 ```
 

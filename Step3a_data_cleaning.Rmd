@@ -9,11 +9,11 @@ output:
   toc: true
 params:
     #don't change these
-    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
     user: !r Sys.getenv("LOGNAME")
     data_path: "/oscar/data/tkartzin/projects"
     
     #update these for your analysis
+    step_3a_analysis_date: "20240529" #YYYYMMDD
     project_code: "test"
     seq_run_name: ["URI_20221013", "URI_20230519"] #these are the folder names in the 'data/tkartzin/projects/<project_code>' dir
     step_1_analysis_date: ["20240502_tdivoll", "20240430_tdivoll"] #make sure these dates are in the same order as the appropriate `seq_run_name` folders
@@ -35,7 +35,7 @@ here::i_am("./Step3a_data_cleaning.Rmd")
 # set global chunk parameters here
 knitr::opts_chunk$set(echo = TRUE)
 Sys.setenv(user=params$user)
-Sys.setenv(todaydate=params$todaydate)
+Sys.setenv(date=params$step_3a_analysis_date)
 Sys.setenv(min_read_length=params$min_read_length)
 Sys.setenv(max_read_length=params$max_read_length)
 Sys.setenv(clean_threshold=params$clean_threshold)
@@ -43,7 +43,7 @@ Sys.setenv(clean_threshold=params$clean_threshold)
 
 The date for the output path will correspond to this analysis date.
 ```{r}
-output_path = file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$todaydate, params$user))
+output_path = file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3a_analysis_date, params$user))
 dir.create(output_path)
 
 Sys.setenv(output_path=output_path)
@@ -67,9 +67,9 @@ Check for duplicate sample names. Expect a message like this: "No duplicate comb
 ```{r }
 files <- list.files(path=output_path, pattern="\\.fastq$")
 samples_in_files <- as.data.frame(str_extract(files, "[^_]+"))
-samples_in_metadata <-  #exclude and remove non-matching
-
 colnames(samples) <- "sample_names"
+samples_in_metadata <-  as.data.frame(sample_names) #exclude and remove non-matching
+
 duplicates <- get_dupes(samples, sample_names)
 ```
 
@@ -129,7 +129,7 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
-obigrep -l $min_read_length -L $max_read_length -p 'count>=2' all.uniq.fasta > ${todaydate}_all.uniq.fasta
+obigrep -l $min_read_length -L $max_read_length -p 'count>=2' all.uniq.fasta > ${date}_all.uniq.fasta
 ```
 
 #### Clean the sequences for PCR/sequencing errors (sequence variants)
@@ -140,7 +140,7 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
-obiclean -s merged_sample -r $clean_threshold -H ${todaydate}_all.uniq.fasta > ${todaydate}_alluniq.clean.fasta
+obiclean -s merged_sample -r $clean_threshold -H ${date}_all.uniq.fasta > ${date}_alluniq.clean.fasta
 ```
 #### Create a tabulated file to check the number of sequence reads in each sample
 
@@ -149,8 +149,8 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
-obitab -o ${todaydate}_alluniq.clean.fasta > ${todaydate}_alluniq.clean.tab
-obicount ${todaydate}_alluniq.clean.fasta --without-progress-bar
+obitab -o ${date}_alluniq.clean.fasta > ${date}_alluniq.clean.tab
+obicount ${date}_alluniq.clean.fasta --without-progress-bar
 ```
 
 #### Take notes
