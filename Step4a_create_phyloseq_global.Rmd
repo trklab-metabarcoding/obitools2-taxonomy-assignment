@@ -17,8 +17,9 @@ params:
     project_code: "test"
     taxa_division: "PLN"
     region_of_interest: "P6"
-    step_3_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3
+    step_3b_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
     metadata_file: "test_phyloseq_metadata.csv"
+    percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
 ---
 
 ## Create a Phyloseq Object
@@ -37,7 +38,7 @@ This code block will use the tabulated file created in Step 3 and a list of samp
 ```{r}
 input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3_analysis_date, params$user))
 
-data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3_analysis_date)), sep="\t", header=TRUE)
+data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3b_analysis_date)), sep="\t", header=TRUE)
 
 data_samples <- read.csv(params$metadata_file)
 ```
