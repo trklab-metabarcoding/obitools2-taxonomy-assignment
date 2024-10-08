@@ -19,9 +19,10 @@ params:
     step_1_analysis_date: ["20240502_tdivoll", "20240430_tdivoll"] #make sure these dates are in the same order as the appropriate `seq_run_name` folders
     
     ##obitools params
-    min_read_length: 8     #-l in obigrep
-    max_read_length: 300   #-L in obigrep
-    clean_threshold: 0.05  #-r in obiclean
+    min_read_length: 8        #-l in obigrep
+    max_read_length: 300      #-L in obigrep
+    copy_number_threshold: 2  #-p in obigrep
+    clean_threshold: 0.05     #-r in obiclean
 ---
 
 ```{r include=FALSE}
@@ -38,6 +39,7 @@ Sys.setenv(user=params$user)
 Sys.setenv(date=params$step_3a_analysis_date)
 Sys.setenv(min_read_length=params$min_read_length)
 Sys.setenv(max_read_length=params$max_read_length)
+Sys.setenv(copy_threshold=params$copy_number_threshold)
 Sys.setenv(clean_threshold=params$clean_threshold)
 ```
 
@@ -129,7 +131,7 @@ source ~/.bash_profile
 conda activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
-obigrep -l $min_read_length -L $max_read_length -p 'count>=2' all.uniq.fasta > ${date}_all.uniq.fasta
+obigrep -l $min_read_length -L $max_read_length -p "count>=$copy_threshold" all.uniq.fasta > ${date}_all.uniq.fasta
 ```
 
 #### Clean the sequences for PCR/sequencing errors (sequence variants)
