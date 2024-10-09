@@ -68,11 +68,15 @@ file.copy(from = merged_data, to = output_path)
 Check for duplicate sample names. Expect a message like this: "No duplicate combinations found of: sample_names". If you get output here, perhaps you have run the sample before? 
 ```{r }
 files <- list.files(path=output_path, pattern="\\.fastq$")
-samples_in_files <- as.data.frame(str_extract(files, "[^_]+"))
-colnames(samples) <- "sample_names"
-samples_in_metadata <-  as.data.frame(sample_names) #exclude and remove non-matching
 
-duplicates <- get_dupes(samples, sample_names)
+#pull the sample names from file names into a dataframe 
+samples_in_files <- as.data.frame(str_extract(files, "[^_]+"))
+
+#make a column for the sample names that we can pass to a dupes function
+colnames(samples_in_files) <- "sample_names"
+
+#search for any duplicated sample names (sample names here are a prefix of file names and could have been run on multiple dates)
+duplicates <- get_dupes(samples_in_files, sample_names)
 ```
 
 Now that all the controls and potentially bad samples were removed in Step 1c, we rerun the merging steps and clean the final merged data set.
