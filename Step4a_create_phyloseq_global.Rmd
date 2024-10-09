@@ -8,7 +8,6 @@ html_document:
   toc: true
 params:
     #don't change these
-    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
     user: !r Sys.getenv("LOGNAME")
     data_path: "/oscar/data/tkartzin/projects"
     ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
