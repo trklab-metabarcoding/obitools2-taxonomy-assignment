@@ -17,7 +17,8 @@ params:
     project_code: "test"
     taxa_division: "PLN"
     region_of_interest: "P6"
-    step_3b_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
+    step_3b_analysis_date: "20240502" #YYYYMMDD
+    step_3c_analysis_date: "20240530" 
     metadata_file: "test_phyloseq_metadata.csv"
     percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
 ---
