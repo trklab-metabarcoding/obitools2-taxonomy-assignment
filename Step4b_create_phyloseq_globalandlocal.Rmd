@@ -1,5 +1,6 @@
 ---
 title: "Step 4b - Phyloseq global and local"
+subtitle: "Create phyloseq object using global and local output."
 authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
 output: html_document
 date: "2024-04-25"
