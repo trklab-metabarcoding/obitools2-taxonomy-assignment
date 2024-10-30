@@ -1,5 +1,6 @@
 ---
 title: "Step 3b - assign taxonomy w/ global db"
+subtitle: "Assign taxonomy to cleaned sequences using global database file."
 author: "B.Littleford-Colquhoun & T.Divoll"
 date: "2023-09-21"
 html_document:

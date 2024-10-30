@@ -1,5 +1,6 @@
 ---
 title: "Step 3a data cleaning"
+subtitle: "Dereplicate sequence reads across samples; filter sequences based on length and occurrence; clean sequences of PCR/sequencing errors."
 author: "B.Littleford-Colquhoun & T.Divoll"
 date: "2023-09-21"
 output: 

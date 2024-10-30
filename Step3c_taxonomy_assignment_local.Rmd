@@ -1,5 +1,6 @@
 ---
 title: "Step 3c - assign taxonomy w/ local db"
+subtitle: "Assign taxonomy to cleaned sequences using local database file."
 authors: "B.Littleford-Colquhoun & T.Divoll"
 output: html_document
 date: "2024-04-25"
