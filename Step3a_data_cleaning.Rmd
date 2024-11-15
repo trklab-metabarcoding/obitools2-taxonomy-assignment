@@ -18,6 +18,7 @@ params:
     project_code: "test"
     seq_run_name: ["URI_20221013", "URI_20230519"] #these are the folder names in the 'data/tkartzin/projects/<project_code>' dir
     step_1_analysis_date: ["20240502_tdivoll", "20240430_tdivoll"] #make sure these dates are in the same order as the appropriate `seq_run_name` folders
+    metadata_file: "test_phyloseq_metadata.csv"
     
     ##obitools params
     min_read_length: 8        #-l in obigrep
@@ -29,7 +30,7 @@ params:
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, janitor, stringr)
+pacman::p_load(knitr, here, tidyr, dplyr, janitor, stringr, readr)
 here::i_am("./Step3a_data_cleaning.Rmd")
 ```
 
@@ -52,28 +53,31 @@ dir.create(output_path)
 Sys.setenv(output_path=output_path)
 ```
 
+#### Make a list of files we want to process
+In our metadata file, the SampleID and Folder columns are useful for filtering down to just the files we want to process rather than pulling everything from each folder.
+
+Check for duplicate sample names. Expect a message like this: "No duplicate combinations found of: SampleID". If you get output in the new `duplicates` dataframe, perhaps you have run the sample before? Recheck your metadata file and remove the duplicate samples.
+```{r}
+metadata <- read_csv(params$metadata_file)
+duplicates <- get_dupes(metadata, SampleID)
+```
+
+```{r}
+file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_run_name, params$step_1_analysis_date), recursive=T, pattern=("*.fastq"), full.names=T)
+
+matching_files <- file_list[sapply(file_list, function(file) {
+  any(grepl(paste(metadata$SampleID, collapse = "|"), basename(file)))
+  })]
+```
+
 #### Collect all the final results from each sequencing run
 ```{r}
-file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_run_name, params$step_1_analysis_date),
-           recursive=T,
-           pattern=("*.fastq"),
-           full.names=T)
-merged_data <- grep("id_data", file_list, value = TRUE, fixed = TRUE)
+merged_data <- grep("id_data", matching_files, value = TRUE, fixed = TRUE)
 ```
 
 Copy the collected files over to a dated folder in the project's 'merged_runs' folder.
 ```{r}
 file.copy(from = merged_data, to = output_path)
-```
-
-Check for duplicate sample names. Expect a message like this: "No duplicate combinations found of: sample_names". If you get output here, perhaps you have run the sample before? 
-```{r }
-files <- list.files(path=output_path, pattern="\\.fastq$")
-samples_in_files <- as.data.frame(str_extract(files, "[^_]+"))
-colnames(samples) <- "sample_names"
-samples_in_metadata <-  as.data.frame(sample_names) #exclude and remove non-matching
-
-duplicates <- get_dupes(samples, sample_names)
 ```
 
 Now that all the controls and potentially bad samples were removed in Step 1c, we rerun the merging steps and clean the final merged data set.
@@ -154,6 +158,12 @@ cd $output_path
 
 obitab -o ${date}_alluniq.clean.fasta > ${date}_alluniq.clean.tab
 obicount ${date}_alluniq.clean.fasta --without-progress-bar
+```
+
+#### Calculate mean and range sequence lengths for each sample
+```{r}
+
+tabseqs <- read_tsv(list.files(file.path(output_path), pattern = "_alluniq.clean.tab", full.names=T))
 ```
 
 #### Take notes
