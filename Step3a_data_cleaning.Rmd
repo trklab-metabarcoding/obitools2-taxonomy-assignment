@@ -4,7 +4,7 @@ subtitle: "Dereplicate sequence reads across samples; filter sequences based on 
 author: "B.Littleford-Colquhoun & T.Divoll"
 date: "2023-09-21"
 output: 
-  html_document:
+  html_notebook:
   keep_md: TRUE
   df_print: paged
   toc: true
@@ -14,7 +14,7 @@ params:
     data_path: "/oscar/data/tkartzin/projects"
     
     #update these for your analysis
-    step_3a_analysis_date: "20241009" #YYYYMMDD
+    step_3a_analysis_date: "20241123" #YYYYMMDD
     project_code: "test"
     seq_run_name: ["URI_20221013", "URI_20230519"] #these are the folder names in the 'data/tkartzin/projects/<project_code>' dir
     step_1_analysis_date: ["20240502_tdivoll", "20240430_tdivoll"] #make sure these dates are in the same order as the appropriate `seq_run_name` folders
@@ -185,5 +185,5 @@ These notebooks will remain in your dated analysis folder, use this space for an
 
 **Note: Save and knit this notebook first so any results are recorded before copying. Then run this final chunk.**
 ```{r}
-file.copy("./Step3a_data_cleaning.html", file.path(glue("{output_path}/Step3a_data_cleaning.html")))
+file.copy("./Step3a_data_cleaning.nb.html", file.path(glue("{output_path}/Step3a_data_cleaning.nb.html")), overwrite = TRUE)
 ```
