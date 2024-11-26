@@ -2,9 +2,10 @@
 title: "Step 3c - assign taxonomy w/ local db"
 subtitle: "Assign taxonomy to cleaned sequences using local database file."
 authors: "B.Littleford-Colquhoun & T.Divoll"
-output: html_document
 date: "2024-04-25"
-html_document:
+output: 
+  html_notebook:
+  keep_md: TRUE
   df_print: paged
   toc: true
 params:
@@ -36,7 +37,7 @@ here::i_am("./Step3c_taxonomy_assignment_local.Rmd")
 #### Set up standard path variables
 The following variables are created with the params you input in the YAML block above.
 ```{r}
-output_path <- file.path(params$data_path, params$data_project_code, "merged_runs", sprintf("%s_%s", params$todaydate, params$step_3a_analysis_date))
+output_path <- file.path(params$data_path, params$data_project_code, "merged_runs", sprintf("%s_%s", params$step_3a_analysis_date, params$user))
 
 cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$step_3a_analysis_date))
 
@@ -99,3 +100,11 @@ cd $output_path
 
 obitab -o ${DATE}_local_alluniq.clean.tag.ann.fasta > ${DATE}_local_alluniq.clean.tag.ann.tab
 ```
+
+#### Copy over your notebook to the shared lab directory on Oscar.
+
+**Note: Save this notebook first so any results are recorded before copying. Then run this final chunk.**
+```{r}
+file.copy("./Step3c_taxonomy_assignment_local.nb.html", file.path(glue("{output_path}/Step3c_taxonomy_assignment_local.nb.html")), overwrite = TRUE)
+```
+
