@@ -3,7 +3,9 @@ title: "Step 3b - assign taxonomy w/ global db"
 subtitle: "Assign taxonomy to cleaned sequences using global database file."
 author: "B.Littleford-Colquhoun & T.Divoll"
 date: "2023-09-21"
-html_document:
+output: 
+  html_notebook:
+  keep_md: TRUE
   df_print: paged
   toc: true
 params:
@@ -58,7 +60,7 @@ Sys.setenv(output_path=output_path)
 #### Assign taxonomy to each sequence using the global reference library
 ```{bash}
 source ~/.bash_profile
-conda activate /users/${user}/.conda/envs/obitools-env
+source activate /users/${user}/.conda/envs/obitools-env
 mkdir -p $output_path
 cd $output_path
 
@@ -71,7 +73,7 @@ obicount ${DATE}_global_alluniq.clean.tag.fasta --without-progress-bar
 Un-useful attributes can be removed from sequences
 ```{bash}
 source ~/.bash_profile
-conda activate /users/${user}/.conda/envs/obitools-env
+source activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
 obiannotate --delete-tag=scientific_name_by_db --delete-tag=obiclean_samplecount \
@@ -90,8 +92,17 @@ obicount -a ${DATE}_global_alluniq.clean.tag.ann.fasta --without-progress-bar
 This is your final OBITools output (resembles a large ASV/OTU table) that can be used to create a phyloseq object in the next step
 ```{bash}
 source ~/.bash_profile
-conda activate /users/${user}/.conda/envs/obitools-env
+source activate /users/${user}/.conda/envs/obitools-env
 cd $output_path
 
 obitab -o ${DATE}_global_alluniq.clean.tag.ann.fasta > ${DATE}_global_alluniq.clean.tag.ann.tab
 ```
+
+#### Copy over your notebook to the shared lab directory on Oscar.
+
+**Note: Save this notebook first so any results are recorded before copying. Then run this final chunk.**
+```{r}
+file.copy("./Step3b_taxonomy_assignment_global.nb.html", file.path(glue("{output_path}/Step3b_taxonomy_assignment_global.nb.html")), overwrite = TRUE)
+```
+
+

@@ -2,9 +2,10 @@
 title: "Step 4a - Phyloseq global"
 subtitle: "Create phyloseq object using global output only."
 authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
-output: html_document
 date: "2024-04-25"
-html_document:
+output: 
+  html_notebook:
+  keep_md: TRUE
   df_print: paged
   toc: true
 params:
@@ -30,18 +31,19 @@ This notebook will use your data with taxonomy assigned from the latest global r
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard) #this takes a few minutes
+pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, glue, scales, datawizard) #this takes a few minutes
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
 ## Read in data
 This code block will use the tabulated file created in Step 3 and a list of samples
 ```{r}
-input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3_analysis_date, params$user))
+input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3b_analysis_date, params$user))
 
 data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3b_analysis_date)), sep="\t", header=TRUE)
 
 data_samples <- read.csv(params$metadata_file)
+data_samples <- data_samples[order(data_samples$SampleID), ]
 ```
 
 ### Filter the data to only keep 100% matches
@@ -97,6 +99,19 @@ if (identical(sample_names(OTU), sample_names(samples))){
 ```{r}
 rds_file<- phyloseq(OTU, TAX, samples) 
 saveRDS(rds_file, file.path(input_path, paste0(params$project_code, params$region_of_interest, "_diet_global_", params$todaydate, ".rds")))
-
-## copy over OTU, TAX, samples to "merged_runs"
 ```
+
+## Copy over OTU, TAX, samples to "merged_runs"
+```{r}
+output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3b_analysis_date, params$user))
+
+write.csv(OTU_table, "OTU_table.csv")
+file.copy("./OTU_table.csv", file.path(glue("{output_path}/OTU_table.csv")))
+write.csv(tax_table2, "TAX_table.csv")
+file.copy("./TAX_table.csv", file.path(glue("{output_path}/TAX_table.csv")))
+write.csv(data_samples, "./SAMPLES_table.csv")
+file.copy("./SAMPLES_table.csv", file.path(glue("{output_path}/SAMPLES_table.csv")))
+
+file.copy("./Step4a_create_phyloseq_global.nb.html", file.path(glue("{output_path}/Step4a_create_phyloseq_global.nb.html")), overwrite = TRUE)
+```
+
