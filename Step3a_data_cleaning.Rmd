@@ -153,22 +153,28 @@ cd $output_path
 obitab -o ${date}_alluniq.clean.fasta > ${date}_alluniq.clean.tab
 obicount ${date}_alluniq.clean.fasta --without-progress-bar
 ```
+#### Calculate mean and range of sample depths
+```{r}
+ tabseqs <- read_tsv(list.files(output_path, pattern = "_alluniq.clean.tab", full.names=T))
+sample_depth <- colSums(tabseqs[,grep("^sample:", colnames(tabseqs))])
+```
+
+```{r}
+print(paste("The minimum sample depth is: ", min(sample_depth)))
+print(paste("The maximum sample depth is: ", max(sample_depth)))
+print(paste("The mean sample depth is: ", mean(sample_depth)))
+```
+
 
 #### Calculate mean and range sequence lengths for each sample
-After this has run, look at the `tabseqs_calcs` data frame for your results. The results are also passed out as file to your output path with extension `"calcs.tab"`.
+After this has run, look at the minimum, maximum, and mean sequence lengths for reporting.
 ```{r}
+seq_lengths <- tabseqs[, grep("^sequence", names(tabseqs))]
+seq_lengths$length <- str_length(seq_lengths$sequence)
+print(paste("The mean sequence length is: ", signif(mean(seq_lengths$length))))
+print(paste("The minimum sequence length is:", min(seq_lengths$length)))
+print(paste("The maximum sequence length is: ", max(seq_lengths$length)))
 
-tabseqs <- read_tsv(list.files(output_path, pattern = "_alluniq.clean.tab", full.names=T))
-sample_columns <- tabseqs[, grepl("^sample:", names(tabseqs))]
-sample_means <- colMeans(sample_columns)
-sample_ranges <- apply(sample_columns, 2, range)
-tabseqs_calcs <- data.frame(
-  Sample = names(sample_columns),
-  Mean = sample_means,
-  Min = sample_ranges[1, ],
-  Max = sample_ranges[2, ]
-)
-write_tsv(tabseqs_calcs, glue("{output_path}/{params$step_3a_analysis_date}_alluniq.clean.calcs.tab"))
 ```
 
 #### Take notes
