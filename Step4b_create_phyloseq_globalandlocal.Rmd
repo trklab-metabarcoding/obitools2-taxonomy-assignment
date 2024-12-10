@@ -2,9 +2,10 @@
 title: "Step 4b - Phyloseq global and local"
 subtitle: "Create phyloseq object using global and local output."
 authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
-output: html_document
 date: "2024-04-25"
-html_document:
+output: 
+  html_notebook:
+  keep_md: TRUE
   df_print: paged
   toc: true
 params:
@@ -15,8 +16,8 @@ params:
     local_ref_lib_path: "/oscar/data/tkartzin/local_ref_lib"
  
     #update these for your analysis
-    step_3b_analysis_date: "20240529" #YYYYMMDD
-    step_3c_analysis_date: "20240530" #YYYYMMDD
+    step_3b_analysis_date: "20240502" #YYYYMMDD
+    step_3c_analysis_date: "20240502" #YYYYMMDD
     project_code: "test"
     taxa_division: "PLN"
     region_of_interest: "P6"
@@ -26,7 +27,7 @@ params:
 ---
 
 ## Create a Phyloseq Object
-This notebook will use your data with taxonomy assigned from the latest global reference database as well as the latest project-specific local database to create a phyloseq object for downstream analyses.
+This notebook will use your data with taxonomy assigned from the latest global reference database as well as the latest project-specific local database to create a Phyloseq object for downstream analyses.
 ```{r setup, include=FALSE}
 ## Only needed for knitr to render this notebook
 knitr::opts_chunk$set(echo = TRUE)
@@ -36,8 +37,19 @@ pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, d
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
+Make some functions we'll use later.
+```{r}
+#function to calculate standard errors
+se<-function(x) sd(x)/sqrt(length(x))
+
+#function to pull characters from right instead of left
+substrRight <- function(x, n){
+  substr(x, nchar(x)-n+1, nchar(x))
+}
+```
+
 ## Read in data
-This code block will use the tabulated file created in Step 3 and a list of samples
+This code block will use the tabulated file created in Step 3 and a list of samples; it loads the cleaned global and local databases.
 ```{r}
 input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3c_analysis_date, params$user))
 
@@ -74,7 +86,7 @@ best_id_col_local <- find_columns(data_local, starts_with("best_identity"))
 data_local <- data_local %>% 
   select(-contains("obiclean_status"))
 
-local_keep <- data_local[which(data_local[,best_id_col_local]==1),]
+local_keep <- data_local[which(data_local[,best_id_col_local]==params$percent_match),]
 
 local_keep_rows <- nrow(local_keep)
 print(paste0("Number of local rows kept: ", local_keep_rows))
@@ -94,7 +106,7 @@ best_match_col <- find_columns(data_global, starts_with("best_match"))
 data_global <- data_global %>% 
   select(-contains("obiclean_status"))
   
-global_keep <- data_global[intersect(which(data_global[,best_id_col]==1), which(data_local[,best_id_col_local]!=1)),]
+global_keep <- data_global[intersect(which(data_global[,best_id_col]==params$percent_match), which(data_local[,best_id_col_local]!=params$percent_match)),]
 
 global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
 
@@ -113,7 +125,7 @@ keep <- rbind(local_keep, global_keepKEEP)
 Find out distribution of the sequences you toss both locally and globally (i.e., do some match multiple species perfectly, or anything new in GenBank?)
 
 ```{r}
-local_global_toss <- data_local[which(data_local$id %in%keep$id==F),] #tells you how many taxa didn't have 100% matches 
+local_global_toss <- data_local[which(data_local$id %in% keep$id==F),] #tells you how many taxa didn't have 100% matches 
 
 print(paste0("The number of sequences not matching at 100%: ", dim(local_global_toss)[1]))
 ```
@@ -151,6 +163,21 @@ write.csv(global_keep_genera, file.path(input_path, "global_keep_genera.csv"))
 ```
 
 ## Inspect the 90-99% matches
+```{r}
+local_nineties <- filter(data_local, between(best_identity.YNPP6_completeDB_20240430, 0.9, 1)) %>%
+  arrange(desc(best_identity.YNPP6_completeDB_20240430))
+local_nineties %>% count(family_name, sort = TRUE) #families with lots of reads matching at 90-99.99% 
+```
+
+```{r}
+global_nineties <- filter(data_global, between(best_identity.db_20231205_P6set, 0.9, 1)) %>%
+  arrange(desc(best_identity.db_20231205_P6set))
+global_nineties %>% count(family_name, sort = TRUE) #families with lots of reads matching at 90-99.99% 
+```
+Filter for records in the global that are a 100% match not already matched at 100% in the local db.
+```{r}
+global_nineties_keep <- global_nineties[intersect(which(global_nineties$best_identity.db_20231205_P6set==1), which(data_local$best_identity.YNPP6_completeDB_20240430!=1)),]
+```
 
 ## Generate summary statistics for publication
 
