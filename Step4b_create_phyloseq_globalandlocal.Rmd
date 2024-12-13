@@ -86,7 +86,7 @@ best_id_col_local <- find_columns(data_local, starts_with("best_identity"))
 data_local <- data_local %>% 
   select(-contains("obiclean_status"))
 
-local_keep <- data_local[which(data_local[,best_id_col_local]==params$percent_match),]
+local_keep <- data_local[which(data_local[[best_id_col_local]]==params$percent_match),]
 
 local_keep_rows <- nrow(local_keep)
 print(paste0("Number of local rows kept: ", local_keep_rows))
@@ -106,7 +106,7 @@ best_match_col <- find_columns(data_global, starts_with("best_match"))
 data_global <- data_global %>% 
   select(-contains("obiclean_status"))
   
-global_keep <- data_global[intersect(which(data_global[,best_id_col]==params$percent_match), which(data_local[,best_id_col_local]!=params$percent_match)),]
+global_keep <- data_global[intersect(which(data_global[[best_id_col]]==params$percent_match), which(data_local[[best_id_col_local]]!=params$percent_match)),]
 
 global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
 
@@ -164,22 +164,45 @@ write.csv(global_keep_genera, file.path(input_path, "global_keep_genera.csv"))
 
 ## Inspect the 90-99% matches
 ```{r}
-local_nineties <- filter(data_local, between(best_identity.YNPP6_completeDB_20240430, 0.9, 1)) %>%
-  arrange(desc(best_identity.YNPP6_completeDB_20240430))
+local_nineties <- filter(data_local, between(data_local[[best_id_col_local]], 0.9, 1)) %>%
+  arrange(desc(best_id_col_local))
 local_nineties %>% count(family_name, sort = TRUE) #families with lots of reads matching at 90-99.99% 
 ```
 
 ```{r}
-global_nineties <- filter(data_global, between(best_identity.db_20231205_P6set, 0.9, 1)) %>%
-  arrange(desc(best_identity.db_20231205_P6set))
+global_nineties <- filter(data_global, between(data_global[[best_id_col]], 0.9, 1)) %>%
+  arrange(desc(best_id_col))
 global_nineties %>% count(family_name, sort = TRUE) #families with lots of reads matching at 90-99.99% 
 ```
 Filter for records in the global that are a 100% match not already matched at 100% in the local db.
 ```{r}
-global_nineties_keep <- global_nineties[intersect(which(global_nineties$best_identity.db_20231205_P6set==1), which(data_local$best_identity.YNPP6_completeDB_20240430!=1)),]
+global_nineties_keep <- global_nineties[intersect(which(global_nineties[[best_id_col]]==params$percent_match), which(data_local[[best_id_col_local]]!=params$percent_match)),]
 ```
 
 ## Generate summary statistics for publication
+#### Median and max for local and global counts
+```{r}
+print(paste0("The median counts for the local keep subset: ", median(local_keep$count))); print(paste0("The median counts for the global keep subset: ", median(global_keep$count))); 
+print(paste0("The maximum counts for the local keep subset: ",max(local_keep$count))); print(paste0("The maximum counts for the global keep subset: ",max(global_keep$count)))
+```
+#### Sample read depths
+This will make tables with the depths for each sample in each data subset.
+```{r}
+depth <- as.data.frame(t(colSums(data_local[,grep("sample\\.", colnames(data_local))])))
+depth_local_only <- as.data.frame(t(colSums(local_keep[,grep("sample\\.", colnames(local_keep))])))
+depth_global_only <- as.data.frame(t(colSums(global_keep[,grep("sample\\.", colnames(global_keep))])))
+depth_local_and_global <- as.data.frame(t(colSums(keep[,grep("sample\\.", colnames(keep))])))
+
+#combine into one result df; view the new 'sample_depth' dataframe for comparisons
+sample_depths <- bind_rows(
+  depth = depth,
+  depth_local_only = depth_local_only,
+  depth_global_only = depth_global_only,
+  depth_local_and_global = depth_local_and_global,
+  .id = "source"
+)
+```
+
 
 ## Sample-wise Relative Read Abundance (RRA)
 
