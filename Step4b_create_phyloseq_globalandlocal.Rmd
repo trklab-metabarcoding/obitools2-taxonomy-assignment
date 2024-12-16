@@ -33,7 +33,7 @@ This notebook will use your data with taxonomy assigned from the latest global r
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard)
+pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard, ggplot2, ggrepel)
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
@@ -106,7 +106,7 @@ best_match_col <- find_columns(data_global, starts_with("best_match"))
 data_global <- data_global %>% 
   select(-contains("obiclean_status"))
   
-global_keep <- data_global[intersect(which(data_global[[best_id_col]]==params$percent_match), which(data_local[[best_id_col_local]]!=params$percent_match)),]
+global_keep <- data_global[intersect(which(data_global[[best_id_col]] == params$percent_match), which(data_local[[best_id_col_local]]!= params$percent_match)),]
 
 global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
 
@@ -201,6 +201,85 @@ sample_depths <- bind_rows(
   depth_local_and_global = depth_local_and_global,
   .id = "source"
 )
+```
+
+#### Proportions discarded with each subset
+```{r}
+sample_depths <- sample_depths %>%
+   pivot_longer(cols = -source, names_to = "sample", values_to = "value") %>%
+  pivot_wider(names_from = source, values_from = value) %>%
+  group_by(sample) %>%
+  mutate(prop_kept_local = depth_local_only / depth,
+         prop_kept_global = depth_global_only / depth,
+         prop_kept_both = depth_local_and_global / depth,
+         reads_discarded = 1 - prop_kept_both,
+         SampleID = substring(sample, 8, 13)) %>%
+  ungroup() %>%
+  left_join(data_samples %>%
+              select(SampleID, Species), by = "SampleID")
+
+write.csv(sample_depths, "./sample_depths.csv")
+sample_depths 
+```
+
+#### Plot proportional changes at sample level if you add or don't add the global perfect matches to the local perfect matches
+```{r}
+
+ggplot(sample_depths, aes(x = prop_kept_local, y = prop_kept_both)) +
+  geom_point(size=3) +
+  geom_text_repel(aes(label = SampleID),
+                  size=3)+
+  labs(x = "Proportion Kept Locally", 
+       y = "Proportion Kept Both Locally and Globally") +
+  theme_minimal() +
+  coord_cartesian(clip = "off")
+```
+
+```{r}
+sample_depths %>% 
+  gather(type, count, prop_kept_local:prop_kept_global:reads_discarded) %>% 
+  filter(type != "prop_kept_both") %>%
+  ggplot(., aes(x=sample, y=count, fill=forcats::fct_rev(type))) +
+  scale_fill_manual(values = c("grey50", "#FFC20A", "#0C7BDC")) +
+  geom_bar(stat="identity") +
+  theme_classic()+
+  theme(legend.title=element_blank(),
+        axis.text.x=element_blank()) +
+  scale_y_continuous(expand=c(0,0)) +
+  facet_grid(. ~ Species, scales = "free", space = "free")
+```
+#### Print some important metrics overall
+```{r}
+#should be 90% to 80%
+print(paste0("Overall proportion of reads retained with local and global combined: ", sprintf(sum(sample_depths$depth_local_and_global)/sum(sample_depths$depth),fmt='%#.3f')))
+
+#should be 67% to 61%
+print(paste0("Proportion of reads retained with just local: ", sprintf(sum(sample_depths$depth_local_only)/sum(sample_depths$depth),fmt='%#.3f')))
+
+#should be 23% to 27%
+print(paste0("Additional proportion of reads retained with just global: ", sprintf(sum(sample_depths$depth_global_only)/sum(sample_depths$depth),fmt='%#.3f')))
+```
+
+#### 100% matches in local that were new to global
+```{r}
+global_match <- data_global[which(data_global[[best_id_col]] == 1),]
+global_missing <- subset(local_keep, !(id %in% global_match$id)) %>%
+  arrange(desc(count))
+
+
+depth_local_and_global <- colSums(keep[,grep("sample\\.", colnames(keep))])
+
+global_missing_trim <- as.matrix(global_missing[,grep("sample\\.", colnames(global_missing[1,]))])
+
+
+#What in the world is happening below here, lol?
+global_missing_RRA <- as.data.frame(global_missing_trim %o% 1/depth_local_and_global)
+
+
+global_missing_RRA_max <- round(apply(global_missing_RRA, 1, max, na.rm=TRUE), digits=6)
+global_missing_RRA_mean <- round(apply(global_missing_RRA, 1, mean, na.rm=TRUE), digits=6)
+global_missing_RRA_info <- cbind(global_missing[,1:10], global_missing[,382:387], global_missing_RRA_mean, global_missing_RRA_max, global_missing_RRA)
+View(global_missing_RRA_info)
 ```
 
 
