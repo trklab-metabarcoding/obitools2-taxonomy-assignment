@@ -231,6 +231,11 @@ ggplot(sample_depths, aes(x = prop_kept_local, y = prop_kept_both)) +
                   size=3)+
   labs(x = "Proportion Kept Locally", 
        y = "Proportion Kept Both Locally and Globally") +
+  scale_y_continuous(
+  labels = percent, 
+  limits = c(0, 1), 
+  expand = expansion(0, 0)
+) +
   theme_minimal() +
   coord_cartesian(clip = "off")
 ```
@@ -245,8 +250,14 @@ sample_depths %>%
   theme_classic()+
   theme(legend.title=element_blank(),
         axis.text.x=element_blank()) +
-  scale_y_continuous(expand=c(0,0)) +
-  facet_grid(. ~ Species, scales = "free", space = "free")
+  scale_y_continuous(
+  labels = percent, 
+  limits = c(0, 1), 
+  expand = expansion(0, 0)
+) +
+  facet_grid(. ~ Species, scales = "free", space = "free") + 
+  theme(strip.text = element_text(
+    size = 5))
 ```
 #### Print some important metrics overall
 ```{r}
@@ -263,22 +274,19 @@ print(paste0("Additional proportion of reads retained with just global: ", sprin
 #### 100% matches in local that were new to global
 ```{r}
 global_match <- data_global[which(data_global[[best_id_col]] == 1),]
+
 global_missing <- subset(local_keep, !(id %in% global_match$id)) %>%
   arrange(desc(count))
 
+global_missing_trim <- select(global_missing, starts_with("sample."))
 
-depth_local_and_global <- colSums(keep[,grep("sample\\.", colnames(keep))])
-
-global_missing_trim <- as.matrix(global_missing[,grep("sample\\.", colnames(global_missing[1,]))])
-
-
-#What in the world is happening below here, lol?
-global_missing_RRA <- as.data.frame(global_missing_trim %o% 1/depth_local_and_global)
-
+global_missing_RRA <- as.matrix(global_missing_trim) %o% as.matrix(1/sample_depths$depth_local_and_global)
 
 global_missing_RRA_max <- round(apply(global_missing_RRA, 1, max, na.rm=TRUE), digits=6)
 global_missing_RRA_mean <- round(apply(global_missing_RRA, 1, mean, na.rm=TRUE), digits=6)
-global_missing_RRA_info <- cbind(global_missing[,1:10], global_missing[,382:387], global_missing_RRA_mean, global_missing_RRA_max, global_missing_RRA)
+
+global_missing_RRA_info <- cbind(global_missing %>% select(sequence, taxid, species_name, count, genus_name, family_name, starts_with(c("species_list", "best_", "match_"))), global_missing_RRA_max, global_missing_RRA_mean)
+
 View(global_missing_RRA_info)
 ```
 
