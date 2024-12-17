@@ -22,7 +22,11 @@ params:
     taxa_division: "PLN"
     locus: "trnL"
     region_of_interest: "P6"
+<<<<<<< Updated upstream
     latest_db_date: "20240430" #look in `ref_lib_path/project_code/locus/region_of_interest` for the most recent local reference library you want to use #
+=======
+    latest_db_date: "20240430" #look in `ref_lib_path/project_code/locus/region_of_interest` for the most recent local reference library you want to use ##
+>>>>>>> Stashed changes
 ---
 
 This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs. We assume that you are running this notebook on the same day that you ran Step 3a.
@@ -113,14 +117,28 @@ file.copy("./Step3c_taxonomy_assignment_local.nb.html", file.path(glue("{output_
 ref_seq_tab_2c <- "/oscar/data/tkartzin/projects/YNP/merged_runs/20241119_hhoff/20241120_ref_seq.tab"
 ref_seq_tab_2c <- read.table(ref_seq_tab_2c,  sep="\t", header = TRUE)
 head(ref_seq_tab_2c)
+<<<<<<< Updated upstream
+=======
+ref_seq_tab_2c$merged
+>>>>>>> Stashed changes
 
 output_tab_3c <- "/oscar/data/tkartzin/projects/YNP/merged_runs/20241119_hhoff/20241120_local_alluniq.clean.tag.ann.tab"
 output_tab_3c <- read.table(output_tab_3c,  sep="\t", header = TRUE)
 head(output_tab_3c)
+<<<<<<< Updated upstream
 
 merged_3c_for_phyloseq <- left_join(output_tab_3c, ref_seq_tab_2c, by = "sequence")
 
 write.table(merged_3c_for_phyloseq, "20241125_local_alluniq.clean.tag.ann.tab.headers")
+=======
+output_tab_3c$species_list.YNPP6_completeDB_20241108
+
+merged_3c_for_phyloseq <- left_join(output_tab_3c, ref_seq_tab_2c, by = "sequence")
+
+#write.table(merged_3c_for_phyloseq, "20241125_local_alluniq.clean.tag.ann.tab.headers")
+head(merged_3c_for_phyloseq)
+merged_3c_for_phyloseq$species_list.YNPP6_completeDB_20241108
+>>>>>>> Stashed changes
 ```
 
 
