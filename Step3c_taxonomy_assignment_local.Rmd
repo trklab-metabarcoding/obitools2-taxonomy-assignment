@@ -15,8 +15,9 @@ params:
     ref_lib_path: "/oscar/data/tkartzin/local_ref_lib"
   
     #update these for your analysis
-    step_3a_analysis_date: "20240529" #YYYYMMDD
+    step_3a_analysis_date: "20241119" #YYYYMMDD
     step_3c_analysis_date: "20240530" #YYYYMMDD
+    step_2b_analysis_date: "20241119_hhoff" #YYYYMMDD_[initials]
     reference_lib_project_code: "YNP"
     data_project_code: "test"
     taxa_division: "PLN"
@@ -30,7 +31,7 @@ This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tut
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings)
+pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings, glue)
 here::i_am("./Step3c_taxonomy_assignment_local.Rmd")
 ```
 
@@ -109,17 +110,16 @@ file.copy("./Step3c_taxonomy_assignment_local.nb.html", file.path(glue("{output_
 ```
 
 
-## Merge the two tabulated files together. 1) ref_seq (the output from step 2c) and 2) the tabulated file that you created above with the header "Create output for use in phyloseq." 
+## Merge the two tabulated files together. 1) ref_seq (the output from step 2b) and 2) the tabulated file that you created above with the header "Create output for use in phyloseq." 
 ```{r}
-ref_seq_tab_2c <- "/oscar/data/tkartzin/projects/YNP/merged_runs/20241119_hhoff/20241120_ref_seq.tab"
-ref_seq_tab_2c <- read.table(ref_seq_tab_2c,  sep="\t", header = TRUE)
+ref_seq_tab_2b <- (glue("{output_path}/{step_2b_analysis_date}_ref_seq.tab"))
+ref_seq_tab_2b <- read.table(ref_seq_tab_2c,  sep="\t", header = TRUE)
 head(ref_seq_tab_2c)
 
-output_tab_3c <- "/oscar/data/tkartzin/projects/YNP/merged_runs/20241119_hhoff/20241120_local_alluniq.clean.tag.ann.tab"
+output_tab_3c <- (glue("{output_path}/{DATE}_local_alluniq.clean.tag.ann.tab"))
 output_tab_3c <- read.table(output_tab_3c,  sep="\t", header = TRUE)
 head(output_tab_3c)
 
 merged_3c_for_phyloseq <- left_join(output_tab_3c, ref_seq_tab_2c, by = "sequence")
-
-write.table(merged_3c_for_phyloseq, "20241125_local_alluniq.clean.tag.ann.tab.headers")
+write.table(merged_3c_for_phyloseq, "{DATE}_local_alluniq.clean.tag.ann.tab.headers")
 ```
