@@ -33,7 +33,7 @@ This notebook will use your data with taxonomy assigned from the latest global r
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard, ggplot2, ggrepel)
+pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard, ggplot2, ggrepel, glue, textshape)
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
@@ -206,7 +206,7 @@ sample_depths <- bind_rows(
 #### Proportions discarded with each subset
 ```{r}
 sample_depths <- sample_depths %>%
-   pivot_longer(cols = -source, names_to = "sample", values_to = "value") %>%
+  pivot_longer(cols = -source, names_to = "sample", values_to = "value") %>%
   pivot_wider(names_from = source, values_from = value) %>%
   group_by(sample) %>%
   mutate(prop_kept_local = depth_local_only / depth,
@@ -291,11 +291,65 @@ View(global_missing_RRA_info)
 ```
 
 
-## Sample-wise Relative Read Abundance (RRA)
+## Sample-wise Relative Read Abundance
+Sample-wise distribution of reads retained/discarded based on local and/or global criteria.
+```{r}
+#Calculate range of RRA change when global matches are added in
+additional_RRA_with_global <- round(sample_depths$prop_kept_both - sample_depths$prop_kept_local, digits=3)
+RRA_range_global <-  range(additional_RRA_with_global)
+print(glue("Range of RRA with global: ", RRA_range_global[1], "-", RRA_range_global[2]))
+print(glue("Median RRA with global across samples: ", median(additional_RRA_with_global)))
+print(glue("Mean RRA with global across samples: ", mean(additional_RRA_with_global)))
+
+#If >75% of samples gain less than 1% of reads back by including the global, we're in good shape; however, a subset of samples (<5%) could gain back a rather high percentage (>61%), suggesting that we should facilitate
+print(glue("Quantiles of RRA with global: "))
+quantile(additional_RRA_with_global,c(0.75, 0.95,1))
+```
 
 ## Disproportionality
+Figure out whether any of the global matches contribute disproportionately. Report global-matching-taxa that contribute more than 5% of a sample's reads; within those samples, what are the mean, median, and max values?
+```{r}
+#This block makes an empty matrix with as many rows as we need for each sequence identified in the global_keep subset
+global_keep_plants <- matrix(nrow=nrow(global_keep), ncol=4)
+rownames(global_keep_plants) <- as.character(global_keep$scientific_name)
+colnames(global_keep_plants) <- c("length", "mean", "median", "maximum")
+```
 
+This block will loop through each taxa and calculate metrics for each taxa that has at least 1 sample with RRA > RRA_threshold.  
+```{r}
+for(i in 1:nrow(global_keep_plants)){
+  sample_cols = global_keep[i,grep("sample\\.", colnames(global_keep))]
+  global_keep_plants[i,1] <- length(which((sample_cols/depth) > params$RRA_threshold))
+    
+  if(global_keep_plants[i, "length"] >= 1){
+    
+      global_keep_plants[i, "mean"] <- mean(as.numeric(sample_cols[which((sample_cols/depth) > params$RRA_threshold)])  /  as.numeric(depth[which((sample_cols/depth) > params$RRA_threshold)]))
+    
+      global_keep_plants[i, "median"] <- median(as.numeric(global_keep[i, grep("sample\\.", colnames(global_keep))][which((sample_cols/depth) > params$RRA_threshold)])  /  as.numeric(depth[which((sample_cols/depth) > params$RRA_threshold)]))
+    
+      global_keep_plants[i, "maximum"] <- max(as.numeric(global_keep[i, grep("sample\\.", colnames(global_keep))][which((sample_cols/depth) > params$RRA_threshold)])  /  as.numeric(depth[which((sample_cols/depth) > params$RRA_threshold)]))
+  }
+}
+
+global_keep_plants <- as.data.frame(global_keep_plants) %>% drop_na()
+```
+
+Print out some overall metrics about disproportionality in the dataset.
+```{r}
+print(glue("Number of disproportionate taxa: ", nrow(global_keep_plants)))
+
+range_of_dis_lengths <- range(global_keep_plants$length)
+print(glue("Range of sequence counts: ", range_of_dis_lengths[1], "-", range_of_dis_lengths[2]))
+
+range_of_dis_means <- round(range(global_keep_plants$mean), 3)
+print(glue("Range of means: ", range_of_dis_means[1], "-", range_of_dis_means[2]))
+
+range_of_dis_maxs <- round(range(global_keep_plants$maximum), 3)
+print(glue("Range of maximums: ", range_of_dis_maxs[1], "-", range_of_dis_maxs[2]))
+```
 ## Summarize local and non-trace global
+Make a new dataframe containing the local matches and the non-trace global matches and calculate summary stats.
+
 
 ## Summarize sample sizes
 
