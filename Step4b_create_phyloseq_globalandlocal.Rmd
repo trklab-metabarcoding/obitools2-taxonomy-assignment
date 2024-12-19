@@ -348,7 +348,15 @@ range_of_dis_maxs <- round(range(global_keep_plants$maximum), 3)
 print(glue("Range of maximums: ", range_of_dis_maxs[1], "-", range_of_dis_maxs[2]))
 ```
 ## Summarize local and non-trace global
-Make a new dataframe containing the local matches and the non-trace global matches and calculate summary stats.
+Make a new dataframe containing the local matches and the non-trace global matches and calculate summary stats. Non-trace global matches = higher abundance global matches (e.g. >5%).
+```{r}
+global_nontrace <- global_keep[which(global_keep$scientific_name%in%rownames(global_keep_plants)),]
+colnames(global_nontrace) <- names(local_keep)
+global_nontrace 
+local_nontrace_global <- rbind(local_keep, global_nontrace)
+lng_dims <- dim(local_nontrace_global)
+print(glue("There are ", lng_dims[1], " sequence records in the local + global_nontrace subset and ", lng_dims[2], " columns."))
+```
 
 
 ## Summarize sample sizes
