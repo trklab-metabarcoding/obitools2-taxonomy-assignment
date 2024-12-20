@@ -29,8 +29,6 @@ params:
   minor_grouping: 'Season' #could also be Location or Collection Type, etc.
 ---
 
-## Create a Phyloseq Object
-
 This notebook will use your data with taxonomy assigned from the latest global reference database as well as the latest project-specific local database to create a Phyloseq object for downstream analyses.
 ```{r setup, include=FALSE}
 ## Only needed for knitr to render this notebook
@@ -186,7 +184,7 @@ write.csv(global_keep_families, file.path(input_path, "global_keep_familes.csv")
 
 <br>
 
-### Count up 100% matches in each genera with the local library
+### Count up 100% matches in each genera with the global library
 ```{r}
 global_keep_genera <- global_keep %>% count(genus_name, sort = TRUE)
 global_keep_genera
@@ -215,10 +213,9 @@ Filter for records in the global that are a 100% match not already matched at 10
 global_nineties_keep <- global_nineties[intersect(which(global_nineties[[best_id_col]] == params$percent_match), which(data_local[[best_id_col_local]] != params$percent_match)),]
 ```
 
-## Generate summary statistics for publication
-
 <br>
 
+## Generate summary statistics for publication
 #### Median and max for local and global counts
 ```{r}
 print(paste0("The median counts for the local keep subset: ", median(local_keep$count))) 
