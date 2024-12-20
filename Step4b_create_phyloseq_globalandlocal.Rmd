@@ -40,19 +40,6 @@ here::i_am("./Step4a_create_phyloseq_global.Rmd")
 
 <br>
 
-## Make some functions we'll use later
-```{r}
-#function to calculate standard errors
-se <- function(x) sd(x) / sqrt(length(x))
-
-#function to pull characters from right instead of left
-substrRight <- function(x, n){
-  substr(x, nchar(x)-n+1, nchar(x))
-}
-```
-
-<br>
-
 ## Read in data
 This code block will use the tabulated file created in Step 3 and a list of samples; it loads the cleaned global and local databases.
 ```{r}
