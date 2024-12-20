@@ -24,6 +24,9 @@ params:
   metadata_file: test_phyloseq_metadata.csv
   percent_match: 1
   RRA_threshold: 0.05
+  sampleID_column: 'SampleID'
+  major_grouping: 'Species'
+  minor_grouping: 'Season' #could also be Location or Collection Type, etc.
 ---
 
 ## Create a Phyloseq Object
@@ -66,9 +69,9 @@ if (length(which(data_local$id != data_global$id)) == 0){
 
 <br>
 
-### Rename the default column X to SampleID
+### Rename the default column X to `r params$sampleID_column` 
 ```{r}
-colnames(data_samples)[colnames(data_samples) == "X"] ="SampleID"
+colnames(data_samples)[colnames(data_samples) == "X"] = params$sampleID_column
 ```
 
 <br>
@@ -255,10 +258,10 @@ sample_depths <- sample_depths %>%
          prop_kept_global = depth_global_only / depth,
          prop_kept_both = depth_local_and_global / depth,
          reads_discarded = 1 - prop_kept_both,
-         SampleID = substring(sample, 8, 13)) %>%
+         !!sym(params$sampleID_column) := substring(sample, 8, 13)) %>%
   ungroup() %>%
   left_join(data_samples %>%
-              select(SampleID, Species), by = "SampleID")
+              select(!!sym(params$sampleID_column), !!sym(params$major_grouping)), by = setNames(params$sampleID_column, params$sampleID_column))
 
 write.csv(sample_depths, "./sample_depths.csv")
 sample_depths 
@@ -270,7 +273,7 @@ sample_depths
 
 ggplot(sample_depths, aes(x = prop_kept_local, y = prop_kept_both)) +
   geom_point(size=3) +
-  geom_text_repel(aes(label = SampleID),
+  geom_text_repel(aes(label = !!sym(params$sampleID_column)),
                   size=3)+
   labs(x = "Proportion Kept Locally", 
        y = "Proportion Kept Both Locally and Globally") +
@@ -287,7 +290,7 @@ ggplot(sample_depths, aes(x = prop_kept_local, y = prop_kept_both)) +
 
 <br>
 
-#### Plot proportions from each subset by species
+#### Plot proportions from each subset by major gouping
 ```{r warning=FALSE}
 sample_depths %>% 
   gather(type, count, prop_kept_local:prop_kept_global:reads_discarded) %>% 
@@ -303,7 +306,8 @@ sample_depths %>%
   limits = c(0, 1), 
   expand = expansion(0, 0)
 ) +
-  facet_grid(. ~ Species, scales = "free", space = "free") + 
+  facet_grid(reformulate(params$major_grouping), 
+           scales = "free", space = "free") + 
   theme(strip.text = element_text(
     size = 5))
 ```
@@ -447,7 +451,7 @@ print(glue("Total local + global notrace depth retained: ", round(sum(local_nont
 
 ## Summarize sample sizes
 ```{r warning=FALSE}
-local_nontrace_global_stats <- as.data.frame(cbind(tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), mean), tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), sd), tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), function(x) length(x))))
+local_nontrace_global_stats <- as.data.frame(cbind(tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), mean), tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), sd), tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), function(x) length(x))))
 
 colnames(local_nontrace_global_stats) <- c("mean","sd", "length")
 
@@ -475,7 +479,7 @@ Taxa_table <- keep %>%
   column_to_rownames("row_id")
 
 #Set the index of the samples data to sample names; Phyloseq needs this to match up teh different shapes of OTU, TAX, and Samples tables
-rownames(data_samples)<- data_samples$SampleID
+rownames(data_samples)<- data_samples[[params$sampleID_column]]
 ```
 
 <br>
