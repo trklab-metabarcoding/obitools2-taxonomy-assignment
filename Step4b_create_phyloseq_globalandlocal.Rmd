@@ -1,33 +1,33 @@
 ---
 title: "Step 4b - Phyloseq global and local"
-subtitle: "Create phyloseq object using global and local output."
-authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
-date: "2024-04-25"
-output: 
-  html_notebook:
-  keep_md: TRUE
+subtitle: Create phyloseq object using global and local output.
+date: "2024-12-20"
+output:
+  html_document:
+    df_print: paged
+  keep_md: yes
   df_print: paged
-  toc: true
+  toc: yes
+  html_notebook: null
+authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
 params:
-    #don't change these
-    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
-    user: !r Sys.getenv("LOGNAME")
-    data_path: "/oscar/data/tkartzin/projects"
-    global_ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
-    local_ref_lib_path: "/oscar/data/tkartzin/local_ref_lib"
- 
-    #update these for your analysis
-    step_3b_analysis_date: "20240502" #YYYYMMDD
-    step_3c_analysis_date: "20240502" #YYYYMMDD
-    project_code: "test"
-    taxa_division: "PLN"
-    region_of_interest: "P6"
-    metadata_file: "test_phyloseq_metadata.csv"
-    percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
-    RRA_threshold: 0.05 # 5%
+  todaydate: !r (format(Sys.Date(), '%Y%m%d'))
+  user: !r Sys.getenv('LOGNAME')
+  data_path: /oscar/data/tkartzin/projects
+  global_ref_lib_path: /oscar/data/tkartzin/global_ref_lib
+  local_ref_lib_path: /oscar/data/tkartzin/local_ref_lib
+  step_3b_analysis_date: '20240502'
+  step_3c_analysis_date: '20240502'
+  project_code: test
+  taxa_division: PLN
+  region_of_interest: P6
+  metadata_file: test_phyloseq_metadata.csv
+  percent_match: 1
+  RRA_threshold: 0.05
 ---
 
 ## Create a Phyloseq Object
+
 This notebook will use your data with taxonomy assigned from the latest global reference database as well as the latest project-specific local database to create a Phyloseq object for downstream analyses.
 ```{r setup, include=FALSE}
 ## Only needed for knitr to render this notebook
@@ -38,16 +38,20 @@ pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, d
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
-Make some functions we'll use later.
+<br>
+
+## Make some functions we'll use later
 ```{r}
 #function to calculate standard errors
-se<-function(x) sd(x)/sqrt(length(x))
+se <- function(x) sd(x) / sqrt(length(x))
 
 #function to pull characters from right instead of left
 substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 ```
+
+<br>
 
 ## Read in data
 This code block will use the tabulated file created in Step 3 and a list of samples; it loads the cleaned global and local databases.
@@ -61,7 +65,9 @@ data_local <- read.csv(file.path(input_path, sprintf("%s_local_alluniq.clean.tag
 data_samples <- read.csv(params$metadata_file)
 ```
 
-### Collect so insights on the shape of data
+<br>
+
+### Collect some insights on the shape of data
 Are there the same number of sequences in your local and global files?
 ```{r}
 if (length(which(data_local$id != data_global$id)) == 0){
@@ -71,10 +77,14 @@ if (length(which(data_local$id != data_global$id)) == 0){
 }
 ```
 
+<br>
+
 ### Rename the default column X to SampleID
 ```{r}
 colnames(data_samples)[colnames(data_samples) == "X"] ="SampleID"
 ```
+
+<br>
 
 ### Filter the data to only keep 100% matches in the local set
 ```{r}
@@ -94,9 +104,10 @@ local_keep_rows <- nrow(local_keep)
 print(paste0("Number of local rows kept: ", local_keep_rows))
 ```
 
+<br>
 
 ### Filter the data to only keep 100% matches in the global set
-Global only keeps perfect matches if they are not already present in the local set of matches
+Global only keeps perfect matches if they are not already present in the local set of matches.
 ```{r}
 size <- dim(data_global) #number of rows and columns
 print(paste0("Number of rows in global data: ", size[1]))
@@ -115,22 +126,27 @@ global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_n
 print(paste0("Number of global rows kept: ", nrow(global_keep)))
 ```
 
+<br>
+
 ### Combine the local and global datasets
-Combine local and additional global libraries into a database called "keep" for exploratory analyses
+Combine local and additional global libraries into a database called "keep" for exploratory analyses.
 ```{r}
 global_keepKEEP <- global_keep
 names(global_keepKEEP) <- names(local_keep)
 keep <- rbind(local_keep, global_keepKEEP)
 ```
 
-### Explore the distribution of sequences
-Find out distribution of the sequences you toss both locally and globally (i.e., do some match multiple species perfectly, or anything new in GenBank?)
+<br>
 
+### Explore the distribution of sequences
+Find out distribution of the sequences you toss both locally and globally (i.e., do some match multiple species perfectly, or anything new in GenBank?).
 ```{r}
 local_global_toss <- data_local[which(data_local$id %in% keep$id==F),] #tells you how many taxa didn't have 100% matches 
 
 print(paste0("The number of sequences not matching at 100%: ", dim(local_global_toss)[1]))
 ```
+
+<br>
 
 ### Look at the seqs with highest read counts for matches >98%
 ```{r}
@@ -138,31 +154,56 @@ local_global_toss <- local_global_toss[order(local_global_toss$count,decreasing=
 head(local_global_toss)
 # may be a couple of taxa we should look at that have 1-2 matches at ~98% match with high read count 
 ```
+
+<br>
+
 ### Look at a histogram of %match < 1 for the tossed samples
-```{r}
-hist(local_global_toss[,best_id_col_local])
+```{r warning=FALSE}
+ggplot(local_global_toss, aes_string(x = best_id_col_local)) +
+  geom_histogram(binwidth=0.05, fill = "steelblue", color = "black") +
+  labs(title = "Histogram of Best ID Column Local",
+       x = best_id_col_local,
+       y = "Frequency") +
+  scale_x_continuous(
+  breaks = seq(0, 1, by = 0.1),
+  labels = scales::percent_format(scale = 100)
+) + 
+  theme_minimal()
 ```
+
+<br>
 
 ### Count up 100% matches in each family with the local library
 ```{r}
 local_keep %>% count(family_name, sort = TRUE)
 ```
+
+<br>
+
 ### Count up 100% matches in each genera with the local library
 ```{r}
 local_keep %>% count(genus_name, sort = TRUE)
 ```
+
+<br>
+
 ### Count up 100% matches in each family with the global library
 ```{r}
 global_keep_families <- global_keep %>% count(family_name, sort = TRUE)
 global_keep_families
 write.csv(global_keep_families, file.path(input_path, "global_keep_familes.csv"))
 ```
+
+<br>
+
 ### Count up 100% matches in each genera with the local library
 ```{r}
 global_keep_genera <- global_keep %>% count(genus_name, sort = TRUE)
 global_keep_genera
 write.csv(global_keep_genera, file.path(input_path, "global_keep_genera.csv"))
 ```
+
+<br>
 
 ## Inspect the 90-99% matches
 ```{r}
@@ -176,17 +217,27 @@ global_nineties <- filter(data_global, between(data_global[[best_id_col]], 0.9, 
   arrange(desc(best_id_col))
 global_nineties %>% count(family_name, sort = TRUE) #families with lots of reads matching at 90-99.99% 
 ```
+
+<br>
+
 Filter for records in the global that are a 100% match not already matched at 100% in the local db.
 ```{r}
-global_nineties_keep <- global_nineties[intersect(which(global_nineties[[best_id_col]]==params$percent_match), which(data_local[[best_id_col_local]]!=params$percent_match)),]
+global_nineties_keep <- global_nineties[intersect(which(global_nineties[[best_id_col]] == params$percent_match), which(data_local[[best_id_col_local]] != params$percent_match)),]
 ```
 
 ## Generate summary statistics for publication
+
+<br>
+
 #### Median and max for local and global counts
 ```{r}
-print(paste0("The median counts for the local keep subset: ", median(local_keep$count))); print(paste0("The median counts for the global keep subset: ", median(global_keep$count))); 
-print(paste0("The maximum counts for the local keep subset: ",max(local_keep$count))); print(paste0("The maximum counts for the global keep subset: ",max(global_keep$count)))
+print(paste0("The median counts for the local keep subset: ", median(local_keep$count))) 
+print(paste0("The median counts for the global keep subset: ", median(global_keep$count)))
+print(paste0("The maximum counts for the local keep subset: ", max(local_keep$count))) 
+print(paste0("The maximum counts for the global keep subset: ", max(global_keep$count)))
 ```
+<br>
+
 #### Sample read depths
 This will make tables with the depths for each sample in each data subset.
 ```{r}
@@ -204,6 +255,8 @@ sample_depths <- bind_rows(
   .id = "source"
 )
 ```
+
+<br>
 
 #### Proportions discarded with each subset
 ```{r}
@@ -223,6 +276,7 @@ sample_depths <- sample_depths %>%
 write.csv(sample_depths, "./sample_depths.csv")
 sample_depths 
 ```
+<br>
 
 #### Plot proportional changes at sample level if you add or don't add the global perfect matches to the local perfect matches
 ```{r}
@@ -236,13 +290,18 @@ ggplot(sample_depths, aes(x = prop_kept_local, y = prop_kept_both)) +
   scale_y_continuous(
   labels = percent, 
   limits = c(0, 1), 
-  expand = expansion(0, 0)
 ) +
-  theme_minimal() +
-  coord_cartesian(clip = "off")
+  scale_x_continuous(
+  labels = percent, 
+  limits = c(0, 1), 
+) +
+  theme_minimal()
 ```
 
-```{r}
+<br>
+
+#### Plot proportions from each subset by species
+```{r warning=FALSE}
 sample_depths %>% 
   gather(type, count, prop_kept_local:prop_kept_global:reads_discarded) %>% 
   filter(type != "prop_kept_both") %>%
@@ -261,6 +320,9 @@ sample_depths %>%
   theme(strip.text = element_text(
     size = 5))
 ```
+
+<br>
+
 #### Print some important metrics overall
 ```{r}
 #should be 90% to 80%
@@ -272,6 +334,8 @@ print(paste0("Proportion of reads retained with just local: ", sprintf(sum(sampl
 #should be 23% to 27%
 print(paste0("Additional proportion of reads retained with just global: ", sprintf(sum(sample_depths$depth_global_only)/sum(sample_depths$depth),fmt='%#.3f')))
 ```
+
+<br>
 
 #### 100% matches in local that were new to global
 ```{r}
@@ -288,10 +352,10 @@ global_missing_RRA_max <- round(apply(global_missing_RRA, 1, max, na.rm=TRUE), d
 global_missing_RRA_mean <- round(apply(global_missing_RRA, 1, mean, na.rm=TRUE), digits=6)
 
 global_missing_RRA_info <- cbind(global_missing %>% select(sequence, taxid, species_name, count, genus_name, family_name, starts_with(c("species_list", "best_", "match_"))), global_missing_RRA_max, global_missing_RRA_mean)
-
-View(global_missing_RRA_info)
+global_missing_RRA_info
 ```
 
+<br>
 
 ## Sample-wise Relative Read Abundance
 Sample-wise distribution of reads retained/discarded based on local and/or global criteria.
@@ -308,6 +372,8 @@ print(glue("Quantiles of RRA with global: "))
 quantile(additional_RRA_with_global,c(0.75, 0.95,1))
 ```
 
+<br>
+
 ## Disproportionality
 Figure out whether any of the global matches contribute disproportionately. Report global-matching-taxa that contribute more than 5% of a sample's reads; within those samples, what are the mean, median, and max values?
 ```{r}
@@ -316,6 +382,8 @@ global_keep_plants <- matrix(nrow=nrow(global_keep), ncol=4)
 rownames(global_keep_plants) <- as.character(global_keep$scientific_name)
 colnames(global_keep_plants) <- c("length", "mean", "median", "maximum")
 ```
+
+<br>
 
 This block will loop through each taxa and calculate metrics for each taxa that has at least 1 sample with RRA > RRA_threshold.  
 ```{r}
@@ -336,6 +404,8 @@ for(i in 1:nrow(global_keep_plants)){
 global_keep_plants <- as.data.frame(global_keep_plants) %>% drop_na()
 ```
 
+<br>
+
 Print out some overall metrics about disproportionality in the dataset.
 ```{r}
 print(glue("Number of disproportionate taxa: ", nrow(global_keep_plants)))
@@ -349,6 +419,9 @@ print(glue("Range of means: ", range_of_dis_means[1], "-", range_of_dis_means[2]
 range_of_dis_maxs <- round(range(global_keep_plants$maximum), 3)
 print(glue("Range of maximums: ", range_of_dis_maxs[1], "-", range_of_dis_maxs[2]))
 ```
+
+<br>
+
 ## Summarize local and non-trace global
 Make a new dataframe containing the local matches and the non-trace global matches and calculate summary stats. Non-trace global matches = higher abundance global matches (e.g. >5%).
 ```{r}
@@ -359,6 +432,9 @@ local_nontrace_global <- rbind(local_keep, global_nontrace)
 lng_dims <- dim(local_nontrace_global)
 print(glue("There are ", lng_dims[1], " sequence records in the local + global_nontrace subset and ", lng_dims[2], " columns."))
 ```
+
+<br>
+
 Calculate sample-wise retention of RRA.
 ```{r}
 local_nontrace_global_depth <- colSums(local_nontrace_global[,grep("sample\\.", colnames(local_nontrace_global))])
@@ -366,6 +442,9 @@ local_nontrace_global_depth <- colSums(local_nontrace_global[,grep("sample\\.", 
 proportion_depth_kept_lng <- local_nontrace_global_depth/as.matrix(depth)
 as.data.frame(proportion_depth_kept_lng)
 ```
+
+<br>
+
 Print metrics about sample-wise retention of RRA.
 ```{r}
 print(glue("Quantiles of RRA with local + global nontrace: "))
@@ -377,6 +456,8 @@ Total local + global notrace depth: ", sum(local_nontrace_global_depth)))
 print(glue("Total local + global notrace depth retained: ", round(sum(local_nontrace_global_depth)/sum(as.matrix(depth)), 3)))
 ```
 
+<br>
+
 ## Summarize sample sizes
 ```{r warning=FALSE}
 local_nontrace_global_stats <- as.data.frame(cbind(tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), mean), tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), sd), tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), function(x) length(x))))
@@ -385,6 +466,9 @@ colnames(local_nontrace_global_stats) <- c("mean","sd", "length")
 
 local_nontrace_global_stats
 ```
+
+<br>
+
 ## Save outputs and generate Phyloseq object
 ```{r}
 #Make the OTU table.
@@ -398,7 +482,7 @@ OTU_table <- keep %>%
 #Make the Taxa table.
 Taxa_table <- keep %>%
   select(-starts_with("sample.")) %>%
-  relocate(id, definition, best_id_col_local, best_match_col_local, count, .after = last_col()) %>%
+  relocate(id, definition, all_of(best_id_col_local), all_of(best_match_col_local), count, .after = last_col()) %>%
   as_tibble(rownames = "row_id") %>%
   mutate(row_id = paste0("P", row_id)) %>%
   column_to_rownames("row_id")
@@ -406,6 +490,8 @@ Taxa_table <- keep %>%
 #Set the index of the samples data to sample names; Phyloseq needs this to match up teh different shapes of OTU, TAX, and Samples tables
 rownames(data_samples)<- data_samples$SampleID
 ```
+
+<br>
 
 Build the Phyloseq diet object, rarefy, and export the rarefied tables for easy loading in future.
 ```{r}
