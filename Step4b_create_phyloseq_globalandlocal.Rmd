@@ -10,6 +10,7 @@ output:
   toc: true
 params:
     #don't change these
+    todaydate: !r (format(Sys.Date(), "%Y%m%d"))
     user: !r Sys.getenv("LOGNAME")
     data_path: "/oscar/data/tkartzin/projects"
     global_ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
@@ -33,7 +34,7 @@ This notebook will use your data with taxonomy assigned from the latest global r
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard, ggplot2, ggrepel, glue, textshape)
+pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard, ggplot2, ggrepel, glue, textshape, stringr)
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
@@ -82,6 +83,7 @@ print(paste0("Number of rows in local data: ", size[1]))
 print(paste0("Number of columns in local data: ", size[2]))
 
 best_id_col_local <- find_columns(data_local, starts_with("best_identity"))
+best_match_col_local <- find_columns(data_local, starts_with("best_match"))
 
 data_local <- data_local %>% 
   select(-contains("obiclean_status"))
@@ -357,10 +359,66 @@ local_nontrace_global <- rbind(local_keep, global_nontrace)
 lng_dims <- dim(local_nontrace_global)
 print(glue("There are ", lng_dims[1], " sequence records in the local + global_nontrace subset and ", lng_dims[2], " columns."))
 ```
+Calculate sample-wise retention of RRA.
+```{r}
+local_nontrace_global_depth <- colSums(local_nontrace_global[,grep("sample\\.", colnames(local_nontrace_global))])
 
+proportion_depth_kept_lng <- local_nontrace_global_depth/as.matrix(depth)
+as.data.frame(proportion_depth_kept_lng)
+```
+Print metrics about sample-wise retention of RRA.
+```{r}
+print(glue("Quantiles of RRA with local + global nontrace: "))
+quantile(proportion_depth_kept_lng)
+
+#proportion of overall reads kept
+print(glue("\n       
+Total local + global notrace depth: ", sum(local_nontrace_global_depth)))
+print(glue("Total local + global notrace depth retained: ", round(sum(local_nontrace_global_depth)/sum(as.matrix(depth)), 3)))
+```
 
 ## Summarize sample sizes
+```{r warning=FALSE}
+local_nontrace_global_stats <- as.data.frame(cbind(tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), mean), tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), sd), tapply(local_nontrace_global_depth, paste(data_samples$Season, data_samples$Species), function(x) length(x))))
 
+colnames(local_nontrace_global_stats) <- c("mean","sd", "length")
+
+local_nontrace_global_stats
+```
 ## Save outputs and generate Phyloseq object
+```{r}
+#Make the OTU table.
+OTU_table <- keep %>%
+  select(starts_with("sample.")) %>%
+  rename_with(~ str_remove_all(., "sample.|_S\\d+"), starts_with("sample.")) %>%
+  as_tibble(rownames = "row_id") %>%
+  mutate(row_id = paste0("P", row_id)) %>%
+  column_to_rownames("row_id")
 
+#Make the Taxa table.
+Taxa_table <- keep %>%
+  select(-starts_with("sample.")) %>%
+  relocate(id, definition, best_id_col_local, best_match_col_local, count, .after = last_col()) %>%
+  as_tibble(rownames = "row_id") %>%
+  mutate(row_id = paste0("P", row_id)) %>%
+  column_to_rownames("row_id")
+
+#Set the index of the samples data to sample names; Phyloseq needs this to match up teh different shapes of OTU, TAX, and Samples tables
+rownames(data_samples)<- data_samples$SampleID
+```
+
+Build the Phyloseq diet object, rarefy, and export the rarefied tables for easy loading in future.
+```{r}
+OTU = otu_table(as.matrix(OTU_table), taxa_are_rows = TRUE)
+TAX = tax_table(as.matrix(Taxa_table))
+samples = sample_data(data_samples)
+
+filename <- glue({params$project_code}, "_diet_local_global_", {params$todaydate}, ".rds")
+phyloseq_object <- phyloseq(OTU, TAX, samples)
+phyloseq_object
+
+saveRDS(phyloseq_object, filename)
+
+# WE HAVE A NEW PHYLOSEQ OBJECT!!!
+```
 
