@@ -11,7 +11,6 @@ output:
   html_notebook: null
 authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
 params:
-  # major and minor groupings are variables of interest to determine sample size statistics and grouping for post-processing
   todaydate: !r (format(Sys.Date(), '%Y%m%d'))
   user: !r Sys.getenv('LOGNAME')
   data_path: /oscar/data/tkartzin/projects
@@ -26,6 +25,7 @@ params:
   percent_match: 1
   RRA_threshold: 0.05
   sampleID_column: 'SampleID'
+  #major and minor groupings are variables of interest to determine sample size statistics and grouping for post-processing
   major_grouping: 'Species'
   minor_grouping: 'Season' #could also be Location or Collection Type, etc.
 ---
