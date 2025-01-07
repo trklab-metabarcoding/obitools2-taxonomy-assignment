@@ -11,6 +11,7 @@ output:
   html_notebook: null
 authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
 params:
+  # major and minor groupings are variables of interest to determine sample size statistics and grouping for post-processing
   todaydate: !r (format(Sys.Date(), '%Y%m%d'))
   user: !r Sys.getenv('LOGNAME')
   data_path: /oscar/data/tkartzin/projects
