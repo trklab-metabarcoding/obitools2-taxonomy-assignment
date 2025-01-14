@@ -143,8 +143,8 @@ cd $output_path
 
 obiclean -s merged_sample -r $clean_threshold -H ${date}_all.uniq.fasta > ${date}_alluniq.clean.fasta
 ```
-#### Create a tabulated file to check the number of sequence reads in each sample
 
+#### Create a tabulated file to check the number of sequence reads in each sample
 ```{bash}
 source ~/.bashrc
 conda activate /users/${user}/.conda/envs/obitools-env
@@ -153,6 +153,7 @@ cd $output_path
 obitab -o ${date}_alluniq.clean.fasta > ${date}_alluniq.clean.tab
 obicount ${date}_alluniq.clean.fasta --without-progress-bar
 ```
+
 #### Calculate mean and range of sample depths
 ```{r}
  tabseqs <- read_tsv(list.files(output_path, pattern = "_alluniq.clean.tab", full.names=T))

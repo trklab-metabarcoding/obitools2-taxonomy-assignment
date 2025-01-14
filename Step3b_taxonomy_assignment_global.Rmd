@@ -19,8 +19,9 @@ params:
     step_3b_analysis_date: "20240530" #YYYYMMDD
     project_code: "test"
     taxa_division: "PLN"
+    locus: "trnL"
     region_of_interest: "P6"
-    latest_db_date: "20231205" #look in ref_lib_path for the most recent global reference library you want to use
+    latest_db_date: "20240430" #look in `ref_lib_path/project_code/locus/region_of_interest` for the most recent local reference library you want to use
 ---
 This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs. We assume that you are running this notebook on the same day that you ran Step 3a.
 
@@ -38,10 +39,10 @@ output_path <- file.path(params$data_path, params$project_code, "merged_runs", s
 
 cleaned_obitools_fasta <- file.path(output_path, sprintf("%s_alluniq.clean.fasta", params$step_3a_analysis_date))
 
-global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$region_of_interest, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
+global_ref_db <- file.path(params$ref_lib_path, params$taxa_division, params$locus, params$region_of_interest, params$latest_db_date, sprintf("%s_ecoPCRformat", params$latest_db_date))
 # -d in ecotag; ecoPCR taxonomy Database name.
 
-ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$region_of_interest, params$latest_db_date, sprintf("%s_%s_completeDB.fasta", params$latest_db_date, params$region_of_interest))
+ref_seq <- file.path(params$ref_lib_path, params$taxa_division, params$locus, params$region_of_interest, params$latest_db_date, sprintf("%s_%s_completeDB.fasta", params$latest_db_date, params$region_of_interest))
 # -R in ecotag; fasta file containing the reference sequences.
 ```
 

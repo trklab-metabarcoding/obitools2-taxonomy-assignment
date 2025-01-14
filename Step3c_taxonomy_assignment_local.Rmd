@@ -17,13 +17,11 @@ params:
     #update these for your analysis
     step_3a_analysis_date: "20241119" #YYYYMMDD
     step_3c_analysis_date: "20240530" #YYYYMMDD
-    step_2b_analysis_date: "20241119_hhoff" #YYYYMMDD_[initials]
     reference_lib_project_code: "YNP"
     data_project_code: "test"
-    taxa_division: "PLN"
     locus: "trnL"
     region_of_interest: "P6"
-    latest_db_date: "20240430" #look in `ref_lib_path/project_code/locus/region_of_interest` for the most recent local reference library you want to use #
+    latest_db_date: "20240430" #look in `ref_lib_path/project_code/locus/region_of_interest` for the most recent local reference library you want to use
 ---
 
 This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tutorial. Run through each code chunk and inspect the outputs. We assume that you are running this notebook on the same day that you ran Step 3a.
@@ -107,19 +105,4 @@ obitab -o ${DATE}_local_alluniq.clean.tag.ann.fasta > ${DATE}_local_alluniq.clea
 **Note: Save this notebook first so any results are recorded before copying. Then run this final chunk.**
 ```{r}
 file.copy("./Step3c_taxonomy_assignment_local.nb.html", file.path(glue("{output_path}/Step3c_taxonomy_assignment_local.nb.html")), overwrite = TRUE)
-```
-
-
-## Merge the two tabulated files together. 1) ref_seq (the output from step 2b) and 2) the tabulated file that you created above with the header "Create output for use in phyloseq." 
-```{r}
-ref_seq_tab_2b <- (glue("{output_path}/{step_2b_analysis_date}_ref_seq.tab"))
-ref_seq_tab_2b <- read.table(ref_seq_tab_2c,  sep="\t", header = TRUE)
-head(ref_seq_tab_2c)
-
-output_tab_3c <- (glue("{output_path}/{DATE}_local_alluniq.clean.tag.ann.tab"))
-output_tab_3c <- read.table(output_tab_3c,  sep="\t", header = TRUE)
-head(output_tab_3c)
-
-merged_3c_for_phyloseq <- left_join(output_tab_3c, ref_seq_tab_2c, by = "sequence")
-write.table(merged_3c_for_phyloseq, "{DATE}_local_alluniq.clean.tag.ann.tab.headers")
 ```
