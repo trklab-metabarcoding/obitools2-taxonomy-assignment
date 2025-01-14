@@ -15,11 +15,10 @@ params:
     ref_lib_path: "/oscar/data/tkartzin/local_ref_lib"
   
     #update these for your analysis
-    step_3a_analysis_date: "20240529" #YYYYMMDD
+    step_3a_analysis_date: "20241119" #YYYYMMDD
     step_3c_analysis_date: "20240530" #YYYYMMDD
     reference_lib_project_code: "YNP"
     data_project_code: "test"
-    taxa_division: "PLN"
     locus: "trnL"
     region_of_interest: "P6"
     latest_db_date: "20240430" #look in `ref_lib_path/project_code/locus/region_of_interest` for the most recent local reference library you want to use
@@ -30,7 +29,7 @@ This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tut
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings)
+pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings, glue)
 here::i_am("./Step3c_taxonomy_assignment_local.Rmd")
 ```
 
@@ -107,4 +106,3 @@ obitab -o ${DATE}_local_alluniq.clean.tag.ann.fasta > ${DATE}_local_alluniq.clea
 ```{r}
 file.copy("./Step3c_taxonomy_assignment_local.nb.html", file.path(glue("{output_path}/Step3c_taxonomy_assignment_local.nb.html")), overwrite = TRUE)
 ```
-
