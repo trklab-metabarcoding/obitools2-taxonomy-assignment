@@ -16,6 +16,8 @@ params:
   data_path: /oscar/data/tkartzin/projects
   global_ref_lib_path: /oscar/data/tkartzin/global_ref_lib
   local_ref_lib_path: /oscar/data/tkartzin/local_ref_lib
+  step_2a_analysis_date: "20241227"
+  step_2b_analysis_date: "20241108"
   step_3b_analysis_date: '20240502'
   step_3c_analysis_date: '20240502'
   project_code: test
@@ -71,6 +73,36 @@ if (length(which(data_local$id != data_global$id)) == 0){
 ### Rename the default column X to `r params$sampleID_column` 
 ```{r}
 colnames(data_samples)[colnames(data_samples) == "X"] = params$sampleID_column
+```
+
+<br>
+
+This block of code will read in the 'completeDB.csv' global library output of step 2a, trim this file to sequence, merged_family, merged_genus, and merged_species columns, and join this file to 'data_global' by sequence.
+```{r}
+#Read in .csv file from step 2a
+global_detailed_headers <- read.csv(file.path(params$global_ref_lib_path, params$taxa_division, params$locus, params$region_of_interest, params$step_2a_analysis_date, paste0(params$step_2a_analysis_date, "_", params$region_of_interest, "_completeDB.csv")))
+head(global_detailed_headers)
+
+#Trim columns 
+global_detailed_headers <- data.frame(sequence = global_detailed_headers$sequence, merged_family_name = global_detailed_headers$merged_family_name, merged_genus_name = global_detailed_headers$merged_genus_name, merged_species_name = global_detailed_headers$merged_species_name)
+ncol(global_detailed_headers)
+
+#Join global_detailed_headers to data_global
+data_global <- left_join(data_global, global_detailed_headers, by = "sequence")
+```
+
+This block of code will read in the 'completeDB.csv' local library output of step 2b, trim this file to sequence, merged_family, merged_genus, and merged_species columns, and join this file to 'data_local' by sequence.
+```{R}
+#Read in .csv file from step 2b
+local_detailed_headers <- read.csv(file.path(params$local_ref_lib_path, params$project_code, params$locus, params$region_of_interest, params$step_2b_analysis_date, paste0(params$project_code, params$region_of_interest, "_", params$step_2b_analysis_date, "_completeDB.csv")))
+head(local_detailed_headers)
+
+#Trim columns
+local_detailed_headers <- data.frame(sequence = local_detailed_headers$sequence, merged_family_name = local_detailed_headers$merged_family_name, merged_genus_name = local_detailed_headers$merged_genus_name, merged_species_name = local_detailed_headers$merged_species_name)
+ncol(local_detailed_headers)
+
+#Join local_detailed_headers to data_local
+data_local <- left_join(data_local, local_detailed_headers, by = "sequence")
 ```
 
 <br>

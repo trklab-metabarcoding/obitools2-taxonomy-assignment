@@ -19,6 +19,7 @@ params:
     project_code: "test"
     taxa_division: "PLN"
     region_of_interest: "P6"
+    step_2a_analysis_date: "20241227"
     step_3b_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
     metadata_file: "test_phyloseq_metadata.csv"
     percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
@@ -44,6 +45,20 @@ data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.t
 
 data_samples <- read.csv(params$metadata_file)
 data_samples <- data_samples[order(data_samples$SampleID), ]
+```
+
+This block of code will read in the 'completeDB.csv' output of step 2a, trim this file to sequence, merged_family, merged_genus, and merged_species columns, and join this file to 'data_global' by sequence.
+```{r}
+#Read in .csv file from step 2a
+global_detailed_headers <- read.csv(file.path(params$ref_lib_path, params$taxa_division, params$locus, params$region_of_interest, params$step_2a_analysis_date, paste0(params$step_2a_analysis_date, "_", params$region_of_interest, "_completeDB.csv")))
+head(global_detailed_headers)
+
+#Trim columns 
+global_detailed_headers <- data.frame(sequence = global_detailed_headers$sequence, merged_family_name = global_detailed_headers$merged_family_name, merged_genus_name = global_detailed_headers$merged_genus_name, merged_species_name = global_detailed_headers$merged_species_name)
+ncol(global_detailed_headers)
+
+#Join global_detailed_headers to data_global
+data_global <- left_join(data_global, global_detailed_headers, by = "sequence")
 ```
 
 ### Filter the data to only keep 100% matches
