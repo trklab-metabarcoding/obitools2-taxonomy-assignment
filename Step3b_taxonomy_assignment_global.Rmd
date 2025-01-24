@@ -28,7 +28,7 @@ This notebook can be used to run the OBITools 1.2.12 pipeline and serve as a tut
 ```{r include=FALSE}
 ## Only needed for knitr to render this notebook
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings)
+pacman::p_load(knitr, here, tidyr, dplyr, readxl, stringr, spgs, filesstrings, glue)
 here::i_am("./Step3b_taxonomy_assignment_global.Rmd")
 ```
 
