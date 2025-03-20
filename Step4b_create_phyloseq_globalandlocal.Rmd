@@ -1,7 +1,8 @@
 ---
 title: "Step 4b - Phyloseq global and local"
-subtitle: Create phyloseq object using global and local output.
-date: "2024-12-20"
+subtitle: "Create phyloseq object using global and local output"
+authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
+date: "2025-03-20"
 output:
   html_document:
     df_print: paged
@@ -9,25 +10,29 @@ output:
   df_print: paged
   toc: yes
   html_notebook: null
-authors: "TR Kartzinel, BL Littleford-Colquhoun, HK Hoff, TJ Divoll"
 params:
+  #don't change these
   todaydate: !r (format(Sys.Date(), '%Y%m%d'))
   user: !r Sys.getenv('LOGNAME')
   data_path: /oscar/data/tkartzin/projects
   global_ref_lib_path: /oscar/data/tkartzin/global_ref_lib
   local_ref_lib_path: /oscar/data/tkartzin/local_ref_lib
+  
+  #update these for your analysis
+  project_code: "test"
+  taxa_division: "PLN"
+  locus: "trnL"
+  region_of_interest: "P6"
   latest_db_date: "20241125" #find in `global_ref_lib`
-  step_2a_analysis_date: "20241227" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
-  step_2b_analysis_date: "20241108"
-  step_3b_analysis_date: '20240502'
-  step_3c_analysis_date: '20240502'
-  project_code: test
-  taxa_division: PLN
-  region_of_interest: P6
-  metadata_file: test_phyloseq_metadata.csv
+  step_2a_analysis_date: "20241227" #look in the `latest_db_date` folder and get the date associated with the `_completeDB.csv` file
+  step_2b_analysis_date: "20241108" #look in the `local_ref_lib` folder under the desired project code, locus, and region of interest to get the date of the folder associated with the `_completeDB.csv` file you would like to use
+  step_3b_analysis_date: '20240502' #if running this step on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
+  step_3c_analysis_date: '20240502' #if running this step on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
+  metadata_file: "test_phyloseq_metadata.csv"
   percent_match: 1
   RRA_threshold: 0.05
   sampleID_column: 'SampleID'
+  
   #major and minor groupings are variables of interest to determine sample size statistics and grouping for post-processing
   major_grouping: 'Species'
   minor_grouping: 'Season' #could also be Location or Collection Type, etc.
