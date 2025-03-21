@@ -66,6 +66,7 @@ mkdir -p $output_path
 cd $output_path
 
 ecotag -d ${global_ref_db} -R ${ref_seq} ${cleaned_obitools_fasta} > ${DATE}_global_alluniq.clean.tag.fasta
+# Note: you will likely get a red "error" message that obitools can't find the .pdx file. This message can be ignored and this step should carry on running as expected.  
 
 #Count number of sequences in your file
 obicount ${DATE}_global_alluniq.clean.tag.fasta --without-progress-bar
