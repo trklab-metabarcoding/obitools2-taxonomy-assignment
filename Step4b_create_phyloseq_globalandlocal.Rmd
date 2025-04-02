@@ -26,6 +26,7 @@ params:
   latest_db_date: "20241125" #find in `global_ref_lib`
   step_2a_analysis_date: "20241227" #look in the `latest_db_date` folder and get the date associated with the `_completeDB.csv` file
   step_2b_analysis_date: "20241108" #look in the `local_ref_lib` folder under the desired project code, locus, and region of interest to get the date of the folder associated with the `_completeDB.csv` file you would like to use
+  step_3a_analysis_date: "20241123" #look in tkartzin > projects > project_code > merged_runs > date on folder YYYYMMDD_username
   step_3b_analysis_date: '20240502' #if running this step on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
   step_3c_analysis_date: '20240502' #if running this step on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
   metadata_file: "test_phyloseq_metadata.csv"
@@ -53,7 +54,7 @@ here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ## Read in data
 This code block will use the tabulated file created in Step 3 and a list of samples; it loads the cleaned global and local databases.
 ```{r}
-input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3c_analysis_date, params$user))
+input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3a_analysis_date, params$user))
 
 data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3b_analysis_date)), sep="\t", header=TRUE)
 
