@@ -80,12 +80,35 @@ best_match_col <- find_columns(data_global, starts_with("best_match"))
 
 data_global <- data_global %>% 
   select(-contains("obiclean_status"))
-  
+ 
 global_keep <- data_global[which(data_global[,best_id_col]==1),]
+```
+
+### Filter the data to samples with at least `r params$min_read_count`
+```{r}
+filter_low_count_samples <- function(df) {
+  # calc read count sums for sample columns
+  sample_sums <- df %>% 
+    select(starts_with("sample.")) %>% 
+    summarise(across(everything(), \(x) sum(x, na.rm = TRUE)))
+  
+  # get names of columns to keep (those with sums >= `min_read_count`)
+  columns_to_keep <- sample_sums %>%
+    pivot_longer(everything(), names_to = "column", values_to = "sum") %>%
+    filter(sum >= params$min_read_count) %>%
+    pull(column)
+  
+  # get all non-sample columns to keep
+  non_sample_cols <- names(df)[!grepl("^sample\\.", names(df))]
+  
+  # return the filtered df with only samples passing `min_read_count`
+  df %>% select(all_of(non_sample_cols), any_of(columns_to_keep))
+}
+
+# apply the filtering function
+global_keep <- filter_low_count_samples(global_keep)
 
 global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
-
-# filter out by min_read_length for all sample_ columns - sum by column
 
 keep_rows <- nrow(global_keep)
 print(paste0("Number of rows kept: ", keep_rows))

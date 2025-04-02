@@ -119,7 +119,29 @@ data_local <- left_join(data_local, local_detailed_headers, by = "sequence")
 
 <br>
 
-### Filter the data to only keep 100% matches in the local set
+### Filter the data to samples with at least `r params$min_read_count`
+```{r}
+filter_low_count_samples <- function(df) {
+  # calc read count sums for sample columns
+  sample_sums <- df %>% 
+    select(starts_with("sample.")) %>% 
+    summarise(across(everything(), \(x) sum(x, na.rm = TRUE)))
+  
+  # get names of columns to keep (those with sums >= `min_read_count`)
+  columns_to_keep <- sample_sums %>%
+    pivot_longer(everything(), names_to = "column", values_to = "sum") %>%
+    filter(sum >= params$min_read_count) %>%
+    pull(column)
+  
+  # get all non-sample columns to keep
+  non_sample_cols <- names(df)[!grepl("^sample\\.", names(df))]
+  
+  # return the filtered df with only samples passing `min_read_count`
+  df %>% select(all_of(non_sample_cols), any_of(columns_to_keep))
+}
+```
+
+### Filter the data to only keep 100% matches and samples >`min_read_count` in the local set
 ```{r}
 size <- dim(data_local) #number of rows and columns
 print(paste0("Number of rows in local data: ", size[1]))
@@ -131,7 +153,10 @@ best_match_col_local <- find_columns(data_local, starts_with("best_match"))
 data_local <- data_local %>% 
   select(-contains("obiclean_status"))
 
+# filter for percent match
 local_keep <- data_local[which(data_local[[best_id_col_local]]==params$percent_match),]
+# filter for min read count
+local_keep <- filter_low_count_samples(local_keep)
 
 local_keep_rows <- nrow(local_keep)
 print(paste0("Number of local rows kept: ", local_keep_rows))
@@ -139,7 +164,7 @@ print(paste0("Number of local rows kept: ", local_keep_rows))
 
 <br>
 
-### Filter the data to only keep 100% matches in the global set
+### Filter the data to only keep 100% matches and samples >`min_read_count` in the global set
 Global only keeps perfect matches if they are not already present in the local set of matches.
 ```{r}
 size <- dim(data_global) #number of rows and columns
@@ -152,7 +177,11 @@ best_match_col <- find_columns(data_global, starts_with("best_match"))
 data_global <- data_global %>% 
   select(-contains("obiclean_status"))
   
+# filter for new percent match if not in local already
 global_keep <- data_global[intersect(which(data_global[[best_id_col]] == params$percent_match), which(data_local[[best_id_col_local]]!= params$percent_match)),]
+
+# filter for min read count per sample
+global_keep <- filter_low_count_samples(global_keep)
 
 global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
 
