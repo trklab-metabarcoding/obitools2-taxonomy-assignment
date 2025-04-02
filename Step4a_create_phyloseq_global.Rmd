@@ -85,8 +85,23 @@ global_keep <- data_global[which(data_global[,best_id_col]==1),]
 
 global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
 
+# filter out by min_read_length for all sample_ columns - sum by column
+
 keep_rows <- nrow(global_keep)
 print(paste0("Number of rows kept: ", keep_rows))
+```
+
+## Generate summary statistics for publication
+#### Median and max for global counts
+```{r}
+# median for global counts
+print(paste0("The median counts across all taxa for the global keep set: ", median(global_keep$count)))
+
+# maximum for global counts
+print(paste0("The maximum counts for any one taxa in the global keep set: ", max(global_keep$count)))
+
+# total number of reads across taxa
+print(paste0("Total number of reads in the global keep subset: ", sum(global_keep$count)))
 ```
 
 ## Make a table to represent the counts of each OTU in each sample

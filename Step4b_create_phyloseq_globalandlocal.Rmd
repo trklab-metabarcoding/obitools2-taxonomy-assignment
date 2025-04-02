@@ -263,10 +263,18 @@ global_nineties_keep <- global_nineties[intersect(which(global_nineties[[best_id
 ## Generate summary statistics for publication
 #### Median and max for local and global counts
 ```{r}
-print(paste0("The median counts for the local keep subset: ", median(local_keep$count))) 
-print(paste0("The median counts for the global keep subset: ", median(global_keep$count)))
-print(paste0("The maximum counts for the local keep subset: ", max(local_keep$count))) 
-print(paste0("The maximum counts for the global keep subset: ", max(global_keep$count)))
+print(paste0("The median depth across all taxa for the local keep subset: ", median(local_keep$count))) 
+print(paste0("The median depth across all taxa for the global keep subset: ", median(global_keep$count)))
+print(paste0("The maximum depth for any one taxa in the local keep subset: ", max(local_keep$count))) 
+print(paste0("The maximum depth for any one taxa in the global keep subset: ", max(global_keep$count)))
+
+# x-fold difference in local over global
+## This assumes your local has better median read depth than the global. Some projects may still have a small local database relative to global, so you could switch global and local in the division, and make sure to report that the global is x-fold greater than local.
+print(paste0("Median read depths for the local reference library were >",round(median(local_keep$count)/median(global_keep$count)),"-fold greater than the global reference library"))
+
+# total number of reads in each set
+print(paste0("Total number of reads in the global keep subset: ", sum(global_keep$count)))
+print(paste0("Total number of reads in the local keep subset: ", sum(local_keep$count)))
 ```
 <br>
 
