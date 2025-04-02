@@ -21,10 +21,11 @@ params:
     locus: "trnL"
     region_of_interest: "P6"
     latest_db_date: "20241125"
-    step_2a_analysis_date: "20241227" #look in the `latest_db_date` folder and get the date associated with the `_completeDB.csv` file
-    step_3b_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
+    step_2a_analysis_date: "20241227" # look in the `latest_db_date` folder and get the date associated with the `_completeDB.csv` file
+    step_3b_analysis_date: "20240502" # if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
     metadata_file: "test_phyloseq_metadata.csv"
     percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
+    min_read_count: 1000 # default for catching any cleaned files with low read counts
 ---
 
 ## Create a Phyloseq Object
@@ -34,7 +35,12 @@ This notebook will use your data with taxonomy assigned from the latest global r
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, glue, scales, datawizard) #this takes a few minutes
+pacman::p_load(knitr, here, tidyr, dplyr, vegan, glue, scales, datawizard) # this takes a few minutes
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("phyloseq")
+
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
