@@ -115,10 +115,13 @@ print(paste0("Number of rows kept: ", keep_rows))
 ```
 
 ## Generate summary statistics for publication
-#### Median and max for global counts
+#### Median, mean, and max for global counts
 ```{r}
+# mean for global counts
+print(paste0("The mean counts across all taxa for the global keep set: ", round(mean(global_keep$count))))
+
 # median for global counts
-print(paste0("The median counts across all taxa for the global keep set: ", median(global_keep$count)))
+print(paste0("The median counts across all taxa for the global keep set: ", round(median(global_keep$count))))
 
 # maximum for global counts
 print(paste0("The maximum counts for any one taxa in the global keep set: ", max(global_keep$count)))
@@ -132,6 +135,18 @@ print(paste0("Total number of reads in the global keep subset: ", sum(global_kee
 OTU_table <- global_keep[,grep("sample\\.", colnames(global_keep))]
 names(OTU_table) <- gsub(pattern = "sample.", replacement = "", x = names(OTU_table))
 rownames(OTU_table) <- sub("^", "P", rownames(OTU_table))
+```
+
+## Calulate per-sample number of taxa
+```{r}
+per_sample_avg <- OTU_table %>%
+  pivot_longer(cols = -1, names_to = "sample", values_to = "value") %>%
+  group_by(sample) %>%
+  summarize(
+    num_taxa = sum(value > 0),
+  ) %>%
+  arrange(sample)
+print(per_sample_avg)
 ```
 
 ## Make a taxonomy table

@@ -290,8 +290,10 @@ global_nineties_keep <- global_nineties[intersect(which(global_nineties[[best_id
 <br>
 
 ## Generate summary statistics for publication
-#### Median and max for local and global counts
+#### Median, mean, and max for local and global counts
 ```{r}
+print(paste0("The mean depth across all taxa for the local keep subset: ", mean(local_keep$count)))
+print(paste0("The mean depth across all taxa for the global keep subset: ", mean(global_keep$count))) 
 print(paste0("The median depth across all taxa for the local keep subset: ", median(local_keep$count))) 
 print(paste0("The median depth across all taxa for the global keep subset: ", median(global_keep$count)))
 print(paste0("The maximum depth for any one taxa in the local keep subset: ", max(local_keep$count))) 
