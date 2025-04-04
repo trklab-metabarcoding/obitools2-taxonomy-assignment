@@ -26,7 +26,7 @@ params:
   latest_db_date: "20241125" #find in `global_ref_lib`
   step_2a_analysis_date: "20241227" #look in the `latest_db_date` folder and get the date associated with the `_completeDB.csv` file
   step_2b_analysis_date: "20241108" #look in the `local_ref_lib` folder under the desired project code, locus, and region of interest to get the date of the folder associated with the `_completeDB.csv` file you would like to use
-  step_3a_analysis_date: "20241123" #look in tkartzin > projects > project_code > merged_runs > date on folder YYYYMMDD_username
+  step_3a_analysis_date: "20240502" #look in tkartzin > projects > project_code > merged_runs > date on folder YYYYMMDD_username
   step_3b_analysis_date: '20240502' #if running this step on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
   step_3c_analysis_date: '20240502' #if running this step on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
   metadata_file: "test_phyloseq_metadata.csv"
@@ -46,7 +46,7 @@ This notebook will use your data with taxonomy assigned from the latest global r
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(knitr, here, tidyr, dplyr, vegan, vegetarian, scales, datawizard, ggplot2, ggrepel, glue, textshape, stringr)
+pacman::p_load(knitr, here, tidyr, dplyr, vegan, vegetarian, scales, datawizard, ggplot2, ggrepel, glue, textshape, stringr, forcats)
 
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
@@ -562,6 +562,36 @@ Taxa_table <- keep %>%
 
 #Set the index of the samples data to sample names; Phyloseq needs this to match up teh different shapes of OTU, TAX, and Samples tables
 rownames(data_samples)<- data_samples[[params$sampleID_column]]
+```
+
+## Calulate per-sample number of taxa
+```{r}
+per_sample_avg <- OTU_table %>%
+  pivot_longer(cols = -1, names_to = "sample", values_to = "value") %>%
+  group_by(sample) %>%
+  summarize(
+    num_taxa = sum(value > 0),
+  ) %>%
+  arrange(sample)
+print(per_sample_avg)
+```
+## Calculate mean, median, min, and max number of taxa
+```{r}
+# mean number of taxa across samples
+print(paste0("The mean number of taxa across samples: ", round(mean(per_sample_avg$num_taxa))))
+
+# median number of taxa across samples
+print(paste0("The median number of taxa across samples: ", round(mean(per_sample_avg$num_taxa))))
+
+# min number of taxa across samples
+min_taxa <- min(per_sample_avg$num_taxa)
+min_sample <- per_sample_avg$sample[which.min(per_sample_avg$num_taxa)]
+print(paste0("The minimum number of taxa in any one sample: ", min_taxa, " in ", min_sample))
+
+# max number of taxa across samples
+max_taxa <- max(per_sample_avg$num_taxa)
+max_sample <- per_sample_avg$sample[which.max(per_sample_avg$num_taxa)]
+print(paste0("The maximum number of taxa in any one sample: ", max_taxa, " in ", max_sample))
 ```
 
 <br>

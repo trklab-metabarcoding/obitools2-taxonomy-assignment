@@ -149,6 +149,24 @@ per_sample_avg <- OTU_table %>%
   arrange(sample)
 print(per_sample_avg)
 ```
+## Calculate mean, median, min, and max number of taxa
+```{r}
+# mean number of taxa across samples
+print(paste0("The mean number of taxa across samples: ", round(mean(per_sample_avg$num_taxa))))
+
+# median number of taxa across samples
+print(paste0("The median number of taxa across samples: ", round(mean(per_sample_avg$num_taxa))))
+
+# min number of taxa across samples
+min_taxa <- min(per_sample_avg$num_taxa)
+min_sample <- per_sample_avg$sample[which.min(per_sample_avg$num_taxa)]
+print(paste0("The minimum number of taxa in any one sample: ", min_taxa, " in ", min_sample))
+
+# max number of taxa across samples
+max_taxa <- max(per_sample_avg$num_taxa)
+max_sample <- per_sample_avg$sample[which.max(per_sample_avg$num_taxa)]
+print(paste0("The maximum number of taxa in any one sample: ", max_taxa, " in ", max_sample))
+```
 
 ## Make a taxonomy table
 ```{r}
