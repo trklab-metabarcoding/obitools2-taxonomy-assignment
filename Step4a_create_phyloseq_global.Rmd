@@ -15,18 +15,22 @@ params:
     data_path: "/oscar/data/tkartzin/projects"
     ref_lib_path: "/oscar/data/tkartzin/global_ref_lib"
  
-    #update these for your analysis
+    # update these for your analysis
     project_code: "test"
     taxa_division: "PLN"
     locus: "trnL"
     region_of_interest: "P6"
     latest_db_date: "20241125"
-    step_2a_analysis_date: "20241227" #look in the `latest_db_date` folder and get the date associated with the `_completeDB.csv` file
-    step_3a_analysis_date: "20241123" #look in tkartzin > projects > project_code > merged_runs > date on folder YYYYMMDD_username
-    step_3b_analysis_date: "20240502" #if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
+    step_2a_analysis_date: "20241227" # look in the `latest_db_date` folder and get the date associated with the `_completeDB.csv` file
+    step_3a_analysis_date: "20241123" # look in tkartzin > projects > project_code > merged_runs > date on folder YYYYMMDD_username
+    step_3b_analysis_date: "20240502" # if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
     metadata_file: "test_phyloseq_metadata.csv"
     percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
     min_read_count: 1000 # default for catching any cleaned files with low read counts
+    
+    # major and minor groupings are variables of interest to determine sample size statistics and grouping for post-processing
+    major_grouping: 'Species'
+    minor_grouping: 'Season' # could also be Location or Collection Type, etc.
 ---
 
 ## Create a Phyloseq Object
@@ -46,7 +50,7 @@ here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
 ## Read in data
-This code block will use the tabulated file created in Step 3 and a list of samples
+This code block will use the tabulated file created in Step 3 and a list of samples.
 ```{r}
 input_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3a_analysis_date, params$user))
 
@@ -118,16 +122,16 @@ print(paste0("Number of rows kept: ", keep_rows))
 ## Generate summary statistics for publication
 #### Median, mean, and max for global counts
 ```{r}
-# mean for global counts
-print(paste0("The mean counts across all taxa for the global keep set: ", round(mean(global_keep$count))))
+# Mean read depth of taxa identified using the global reference library
+print(paste0("The mean depth across all taxa for the global keep set: ", round(mean(global_keep$count))))
 
-# median for global counts
-print(paste0("The median counts across all taxa for the global keep set: ", round(median(global_keep$count))))
+# Median read depth of taxa identified using the global reference library
+print(paste0("The median depth across all taxa for the global keep set: ", round(median(global_keep$count))))
 
-# maximum for global counts
-print(paste0("The maximum counts for any one taxa in the global keep set: ", max(global_keep$count)))
+# Maximum read depth of taxa identified using the global reference library
+print(paste0("The maximum depth for any one taxa in the global keep set: ", max(global_keep$count)))
 
-# total number of reads across taxa
+# Overall read depth of taxa identified using the global reference library
 print(paste0("Total number of reads in the global keep subset: ", sum(global_keep$count)))
 ```
 
@@ -188,6 +192,15 @@ if (identical(sample_names(OTU), sample_names(samples))){
 } else {
   print("Something is out of order. Make sure the samples in your metadata file match the order in your OTU. Please fix and rerun this notebook.")
 }
+```
+
+## Summarize sample sizes
+```{r warning=FALSE}
+local_nontrace_global_stats <- as.data.frame(cbind(tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), mean), tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), sd), tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), function(x) length(x))))
+
+colnames(local_nontrace_global_stats) <- c("mean","sd", "length")
+
+local_nontrace_global_stats
 ```
 
 ## Create the final Phyloseq object

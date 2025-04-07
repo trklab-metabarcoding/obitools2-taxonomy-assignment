@@ -92,29 +92,29 @@ colnames(data_samples)[colnames(data_samples) == "X"] = params$sampleID_column
 
 This block of code will read in the 'completeDB.csv' global library output of step 2a, trim this file to sequence, merged_family, merged_genus, and merged_species columns, and join this file to 'data_global' by sequence.
 ```{r}
-#Read in .csv file from step 2a
+# Read in .csv file from step 2a
 global_detailed_headers <- read.csv(file.path(params$global_ref_lib_path, params$taxa_division, params$locus, params$region_of_interest, params$latest_db_date, paste0(params$step_2a_analysis_date, "_", params$region_of_interest, "_completeDB.csv")))
 head(global_detailed_headers)
 
-#Trim columns 
+# Trim columns 
 global_detailed_headers <- data.frame(sequence = global_detailed_headers$sequence, merged_family_name = global_detailed_headers$merged_family_name, merged_genus_name = global_detailed_headers$merged_genus_name, merged_species_name = global_detailed_headers$merged_species_name)
 ncol(global_detailed_headers)
 
-#Join global_detailed_headers to data_global
+# Join global_detailed_headers to data_global
 data_global <- left_join(data_global, global_detailed_headers, by = "sequence")
 ```
 
 This block of code will read in the 'completeDB.csv' local library output of step 2b, trim this file to sequence, merged_family, merged_genus, and merged_species columns, and join this file to 'data_local' by sequence.
 ```{R}
-#Read in .csv file from step 2b
+# Read in .csv file from step 2b
 local_detailed_headers <- read.csv(file.path(params$local_ref_lib_path, params$project_code, params$locus, params$region_of_interest, params$step_2b_analysis_date, paste0(params$project_code, params$region_of_interest, "_", params$step_2b_analysis_date, "_completeDB.csv")))
 head(local_detailed_headers)
 
-#Trim columns
+# Trim columns
 local_detailed_headers <- data.frame(sequence = local_detailed_headers$sequence, merged_family_name = local_detailed_headers$merged_family_name, merged_genus_name = local_detailed_headers$merged_genus_name, merged_species_name = local_detailed_headers$merged_species_name)
 ncol(local_detailed_headers)
 
-#Join local_detailed_headers to data_local
+# Join local_detailed_headers to data_local
 data_local <- left_join(data_local, local_detailed_headers, by = "sequence")
 ```
 
@@ -144,7 +144,7 @@ filter_low_count_samples <- function(df) {
 
 ### Filter the data to only keep 100% matches and samples >`min_read_count` in the local set
 ```{r}
-size <- dim(data_local) #number of rows and columns
+size <- dim(data_local) # number of rows and columns
 print(paste0("Number of rows in local data: ", size[1]))
 print(paste0("Number of columns in local data: ", size[2]))
 
@@ -168,7 +168,7 @@ print(paste0("Number of local rows kept: ", local_keep_rows))
 ### Filter the data to only keep 100% matches and samples >`min_read_count` in the global set
 Global only keeps perfect matches if they are not already present in the local set of matches.
 ```{r}
-size <- dim(data_global) #number of rows and columns
+size <- dim(data_global) # number of rows and columns
 print(paste0("Number of rows in global data: ", size[1]))
 print(paste0("Number of columns in global data: ", size[2]))
 
@@ -178,7 +178,7 @@ best_match_col <- find_columns(data_global, starts_with("best_match"))
 data_global <- data_global %>% 
   select(-contains("obiclean_status"))
   
-# filter for new percent match if not in local already
+# filter for any new matches at the percent match threshold if they are not found in the local set already
 global_keep <- data_global[intersect(which(data_global[[best_id_col]] == params$percent_match), which(data_local[[best_id_col_local]]!= params$percent_match)),]
 
 # filter for min read count per sample
@@ -194,7 +194,14 @@ print(paste0("Number of global rows kept: ", nrow(global_keep)))
 ### Combine the local and global datasets
 Combine local and additional global libraries into a database called "keep" for exploratory analyses.
 ```{r}
-global_keepKEEP <- global_keep
+# Add missing columns to global before overwriting column names
+global_keepKEEP <- global_keep %>%
+    mutate(merged_family_name = "", 
+           merged_genus_name = "",
+           merged_species_name = "",
+           .after = "sequence")
+
+# Overwrite with local names
 names(global_keepKEEP) <- names(local_keep)
 keep <- rbind(local_keep, global_keepKEEP)
 ```
@@ -272,13 +279,13 @@ write.csv(global_keep_genera, file.path(input_path, "global_keep_genera.csv"))
 ```{r}
 local_nineties <- filter(data_local, between(data_local[[best_id_col_local]], 0.9, 1)) %>%
   arrange(desc(best_id_col_local))
-local_nineties %>% count(family_name, sort = TRUE) #families with lots of reads matching at 90-99.99% 
+local_nineties %>% count(family_name, sort = TRUE) # families with lots of reads matching at 90-99.99% 
 ```
 
 ```{r}
 global_nineties <- filter(data_global, between(data_global[[best_id_col]], 0.9, 1)) %>%
   arrange(desc(best_id_col))
-global_nineties %>% count(family_name, sort = TRUE) #families with lots of reads matching at 90-99.99% 
+global_nineties %>% count(family_name, sort = TRUE) # families with lots of reads matching at 90-99.99% 
 ```
 
 <br>
@@ -293,21 +300,38 @@ global_nineties_keep <- global_nineties[intersect(which(global_nineties[[best_id
 ## Generate summary statistics for publication
 #### Median, mean, and max for local and global counts
 ```{r}
-print(paste0("The mean depth across all taxa for the local keep subset: ", mean(local_keep$count)))
-print(paste0("The mean depth across all taxa for the global keep subset: ", mean(global_keep$count))) 
-print(paste0("The median depth across all taxa for the local keep subset: ", median(local_keep$count))) 
-print(paste0("The median depth across all taxa for the global keep subset: ", median(global_keep$count)))
-print(paste0("The maximum depth for any one taxa in the local keep subset: ", max(local_keep$count))) 
-print(paste0("The maximum depth for any one taxa in the global keep subset: ", max(global_keep$count)))
+# Mean read depth of taxa identified using the local reference library
+print(paste0("The mean depth across all taxa for the local keep subset: ", round(mean(local_keep$count))))
 
-# x-fold difference in local over global
-## This assumes your local has better median read depth than the global. Some projects may still have a small local database relative to global, so you could switch global and local in the division, and make sure to report that the global is x-fold greater than local.
+# Mean read depth of taxa identified using the global reference library
+print(paste0("The mean depth across all taxa for the global keep subset: ", round(mean(global_keep$count))))
+
+# Median read depth of taxa identified using the local reference library
+print(paste0("The median depth across all taxa for the local keep subset: ", round(median(local_keep$count))))
+
+# Median read depth of taxa identified using the global reference library
+print(paste0("The median depth across all taxa for the global keep subset: ", round(median(global_keep$count))))
+
+# Maximum read depth of taxa identified using the local reference library
+print(paste0("The maximum depth for any one taxa in the local keep subset: ", max(local_keep$count))) 
+
+# Maximum read depth of taxa identified using the global reference library
+print(paste0("The maximum depth for any one taxa in the global keep subset: ", max(global_keep$count)))
+```
+
+<br>
+
+### Comparison of median read depths across local and global reference libraries
+```{r}
+## This assumes your local reference has better median read depth than the global. Some projects may still have a small local database relative to global, so you could switch global and local in the division below, and make sure to report that the global is x-fold greater than local.
 print(paste0("Median read depths for the local reference library were >",round(median(local_keep$count)/median(global_keep$count)),"-fold greater than the global reference library"))
 
-# total number of reads in each set
+# Calculate total number of reads in final dataset that were taxonomically assigned using each reference library
 print(paste0("Total number of reads in the global keep subset: ", sum(global_keep$count)))
 print(paste0("Total number of reads in the local keep subset: ", sum(local_keep$count)))
+print(paste0("Total number of reads in the final dataset: ", sum(global_keep$count) + sum(local_keep$count)))
 ```
+
 <br>
 
 #### Sample read depths
@@ -318,7 +342,7 @@ depth_local_only <- as.data.frame(t(colSums(local_keep[,grep("sample\\.", colnam
 depth_global_only <- as.data.frame(t(colSums(global_keep[,grep("sample\\.", colnames(global_keep))])))
 depth_local_and_global <- as.data.frame(t(colSums(keep[,grep("sample\\.", colnames(keep))])))
 
-#combine into one result df; view the new 'sample_depth' dataframe for comparisons
+# Combine into one result df; view the new 'sample_depth' dataframe for comparisons
 sample_depths <- bind_rows(
   depth = depth,
   depth_local_only = depth_local_only,
@@ -433,14 +457,14 @@ global_missing_RRA_info
 ## Sample-wise Relative Read Abundance
 Sample-wise distribution of reads retained/discarded based on local and/or global criteria.
 ```{r}
-#Calculate range of RRA change when global matches are added in
+# Calculate range of RRA change when global matches are added in
 additional_RRA_with_global <- round(sample_depths$prop_kept_both - sample_depths$prop_kept_local, digits=3)
 RRA_range_global <-  range(additional_RRA_with_global)
 print(glue("Range of RRA with global: ", RRA_range_global[1], "-", RRA_range_global[2]))
 print(glue("Median RRA with global across samples: ", median(additional_RRA_with_global)))
 print(glue("Mean RRA with global across samples: ", mean(additional_RRA_with_global)))
 
-#If >75% of samples gain less than 1% of reads back by including the global, we're in good shape; however, a subset of samples (<5%) could gain back a rather high percentage (>61%), suggesting that we should facilitate
+# If >75% of samples gain less than 1% of reads back by including the global, we're in good shape; however, a subset of samples (<5%) could gain back a rather high percentage (>61%), suggesting that we should facilitate
 print(glue("Quantiles of RRA with global: "))
 quantile(additional_RRA_with_global,c(0.75, 0.95,1))
 ```
@@ -450,7 +474,7 @@ quantile(additional_RRA_with_global,c(0.75, 0.95,1))
 ## Disproportionality
 Figure out whether any of the global matches contribute disproportionately. Report global-matching-taxa that contribute more than 5% of a sample's reads; within those samples, what are the mean, median, and max values?
 ```{r}
-#This block makes an empty matrix with as many rows as we need for each sequence identified in the global_keep subset
+# This block makes an empty matrix with as many rows as we need for each sequence identified in the global_keep subset
 global_keep_plants <- matrix(nrow=nrow(global_keep), ncol=4)
 rownames(global_keep_plants) <- as.character(global_keep$scientific_name)
 colnames(global_keep_plants) <- c("length", "mean", "median", "maximum")
@@ -498,7 +522,12 @@ print(glue("Range of maximums: ", range_of_dis_maxs[1], "-", range_of_dis_maxs[2
 ## Summarize local and non-trace global
 Make a new dataframe containing the local matches and the non-trace global matches and calculate summary stats. Non-trace global matches = higher abundance global matches (e.g. >5%).
 ```{r}
-global_nontrace <- global_keep[which(global_keep$scientific_name%in%rownames(global_keep_plants)),]
+# Add missing columns to global before overwriting column names
+global_nontrace <- global_keep[which(global_keep$scientific_name%in%rownames(global_keep_plants)),] %>%
+    mutate(merged_family_name = "", 
+           merged_genus_name = "",
+           merged_species_name = "",
+           .after = "sequence")
 colnames(global_nontrace) <- names(local_keep)
 global_nontrace 
 local_nontrace_global <- rbind(local_keep, global_nontrace)
@@ -523,7 +552,7 @@ Print metrics about sample-wise retention of RRA.
 print(glue("Quantiles of RRA with local + global nontrace: "))
 quantile(proportion_depth_kept_lng)
 
-#proportion of overall reads kept
+# proportion of overall reads kept
 print(glue("\n       
 Total local + global notrace depth: ", sum(local_nontrace_global_depth)))
 print(glue("Total local + global notrace depth retained: ", round(sum(local_nontrace_global_depth)/sum(as.matrix(depth)), 3)))
@@ -544,7 +573,7 @@ local_nontrace_global_stats
 
 ## Save outputs and generate Phyloseq object
 ```{r}
-#Make the OTU table.
+# Make the OTU table.
 OTU_table <- keep %>%
   select(starts_with("sample.")) %>%
   rename_with(~ str_remove_all(., "sample.|_S\\d+"), starts_with("sample.")) %>%
@@ -552,7 +581,7 @@ OTU_table <- keep %>%
   mutate(row_id = paste0("P", row_id)) %>%
   column_to_rownames("row_id")
 
-#Make the Taxa table.
+# Make the Taxa table.
 Taxa_table <- keep %>%
   select(-starts_with("sample.")) %>%
   relocate(id, definition, all_of(best_id_col_local), all_of(best_match_col_local), count, .after = last_col()) %>%
@@ -560,8 +589,8 @@ Taxa_table <- keep %>%
   mutate(row_id = paste0("P", row_id)) %>%
   column_to_rownames("row_id")
 
-#Set the index of the samples data to sample names; Phyloseq needs this to match up teh different shapes of OTU, TAX, and Samples tables
-rownames(data_samples)<- data_samples[[params$sampleID_column]]
+# Set the index of the samples data to sample names; Phyloseq needs this to match up the different shapes of OTU, TAX, and Samples tables
+rownames(data_samples) <-  data_samples[[params$sampleID_column]]
 ```
 
 ## Calulate per-sample number of taxa
