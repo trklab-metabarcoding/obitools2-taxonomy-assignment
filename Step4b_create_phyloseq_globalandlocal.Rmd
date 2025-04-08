@@ -560,12 +560,28 @@ print(glue("Total local + global notrace depth retained: ", round(sum(local_nont
 
 <br>
 
-## Summarize sample sizes
-```{r warning=FALSE}
-local_nontrace_global_stats <- as.data.frame(cbind(tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), mean), tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), sd), tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), function(x) length(x))))
+## Summary statistics for sample groupings
+```{r}
+# Clean up sample names by removing "sample. and _Sx"
+depth_data <- tibble(
+  SampleID = str_remove(names(local_nontrace_global_depth), "^sample\\."),
+  local_nontrace_global_depth = local_nontrace_global_depth
+) %>%
+  mutate(SampleID = str_remove(SampleID, "_S\\d+$"))
 
-colnames(local_nontrace_global_stats) <- c("mean","sd", "length")
+# Join with metadata
+combined_data <- data_samples %>%
+  left_join(depth_data, by = "SampleID")
 
+# Calculate stats by group
+local_nontrace_global_stats <- combined_data %>%
+  group_by(.data[[params$minor_grouping]], .data[[params$major_grouping]]) %>%
+  summarize(
+    mean = mean(local_nontrace_global_depth, na.rm = TRUE),
+    sd = sd(local_nontrace_global_depth, na.rm = TRUE),
+    count = n(),
+    .groups = "drop"
+  )
 local_nontrace_global_stats
 ```
 
