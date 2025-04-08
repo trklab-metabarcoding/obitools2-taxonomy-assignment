@@ -120,7 +120,51 @@ data_local <- left_join(data_local, local_detailed_headers, by = "sequence")
 
 <br>
 
-### Filter the data to samples with at least `r params$min_read_count`
+### Filter the data to only keep 100% matches in the local set
+```{r}
+size <- dim(data_local) # number of rows and columns
+print(paste0("Number of rows in local data: ", size[1]))
+print(paste0("Number of columns in local data: ", size[2]))
+
+best_id_col_local <- find_columns(data_local, starts_with("best_identity"))
+best_match_col_local <- find_columns(data_local, starts_with("best_match"))
+
+data_local <- data_local %>% 
+  select(-contains("obiclean_status"))
+
+# filter for percent match
+local_keep <- data_local[which(data_local[[best_id_col_local]]==params$percent_match),]
+
+local_keep_rows <- nrow(local_keep)
+print(paste0("Number of local rows kept: ", local_keep_rows))
+```
+
+<br>
+
+### Filter the data to only keep 100% matches in the global set
+Global only keeps perfect matches if they are not already present in the local set of matches.
+```{r}
+size <- dim(data_global) # number of rows and columns
+print(paste0("Number of rows in global data: ", size[1]))
+print(paste0("Number of columns in global data: ", size[2]))
+
+best_id_col <- find_columns(data_global, starts_with("best_identity"))
+best_match_col <- find_columns(data_global, starts_with("best_match"))
+
+data_global <- data_global %>% 
+  select(-contains("obiclean_status"))
+  
+# filter for any new matches at the percent match threshold if they are not found in the local set already
+global_keep <- data_global[intersect(which(data_global[[best_id_col]] == params$percent_match), which(data_local[[best_id_col_local]]!= params$percent_match)),]
+
+global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
+
+print(paste0("Number of global rows kept: ", nrow(global_keep)))
+```
+
+<br>
+
+### Define a function to filter the data to samples with at least `r params$min_read_count`
 ```{r}
 filter_low_count_samples <- function(df) {
   # calc read count sums for sample columns
@@ -142,56 +186,7 @@ filter_low_count_samples <- function(df) {
 }
 ```
 
-### Filter the data to only keep 100% matches and samples >`min_read_count` in the local set
-```{r}
-size <- dim(data_local) # number of rows and columns
-print(paste0("Number of rows in local data: ", size[1]))
-print(paste0("Number of columns in local data: ", size[2]))
-
-best_id_col_local <- find_columns(data_local, starts_with("best_identity"))
-best_match_col_local <- find_columns(data_local, starts_with("best_match"))
-
-data_local <- data_local %>% 
-  select(-contains("obiclean_status"))
-
-# filter for percent match
-local_keep <- data_local[which(data_local[[best_id_col_local]]==params$percent_match),]
-# filter for min read count
-local_keep <- filter_low_count_samples(local_keep)
-
-local_keep_rows <- nrow(local_keep)
-print(paste0("Number of local rows kept: ", local_keep_rows))
-```
-
-<br>
-
-### Filter the data to only keep 100% matches and samples >`min_read_count` in the global set
-Global only keeps perfect matches if they are not already present in the local set of matches.
-```{r}
-size <- dim(data_global) # number of rows and columns
-print(paste0("Number of rows in global data: ", size[1]))
-print(paste0("Number of columns in global data: ", size[2]))
-
-best_id_col <- find_columns(data_global, starts_with("best_identity"))
-best_match_col <- find_columns(data_global, starts_with("best_match"))
-
-data_global <- data_global %>% 
-  select(-contains("obiclean_status"))
-  
-# filter for any new matches at the percent match threshold if they are not found in the local set already
-global_keep <- data_global[intersect(which(data_global[[best_id_col]] == params$percent_match), which(data_local[[best_id_col_local]]!= params$percent_match)),]
-
-# filter for min read count per sample
-global_keep <- filter_low_count_samples(global_keep)
-
-global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
-
-print(paste0("Number of global rows kept: ", nrow(global_keep)))
-```
-
-<br>
-
-### Combine the local and global datasets
+### Combine the local and global datasets and filter by `min_read_count`
 Combine local and additional global libraries into a database called "keep" for exploratory analyses.
 ```{r}
 # Add missing columns to global before overwriting column names
@@ -204,6 +199,8 @@ global_keepKEEP <- global_keep %>%
 # Overwrite with local names
 names(global_keepKEEP) <- names(local_keep)
 keep <- rbind(local_keep, global_keepKEEP)
+# filter for min read count
+keep <- filter_low_count_samples(keep)
 ```
 
 <br>
@@ -211,7 +208,7 @@ keep <- rbind(local_keep, global_keepKEEP)
 ### Explore the distribution of sequences
 Find out distribution of the sequences you toss both locally and globally (i.e., do some match multiple species perfectly, or anything new in GenBank?).
 ```{r}
-local_global_toss <- data_local[which(data_local$id %in% keep$id==F),] #tells you how many taxa didn't have 100% matches 
+local_global_toss <- data_local[which(data_local$id %in% keep$id==F),] # tells you how many taxa didn't have 100% matches 
 
 print(paste0("The number of sequences not matching at 100%: ", dim(local_global_toss)[1]))
 ```
