@@ -49,6 +49,8 @@ BiocManager::install("phyloseq")
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
 
+<br>
+
 ## Read in data
 This code block will use the tabulated file created in Step 3 and a list of samples.
 ```{r}
@@ -62,21 +64,23 @@ data_samples <- data_samples[order(data_samples$SampleID), ]
 
 This block of code will read in the 'completeDB.csv' output of step 2a, trim this file to sequence, merged_family, merged_genus, and merged_species columns, and join this file to 'data_global' by sequence.
 ```{r}
-#Read in .csv file from step 2a
+# Read in .csv file from step 2a
 global_detailed_headers <- read.csv(file.path(params$ref_lib_path, params$taxa_division, params$locus, params$region_of_interest, params$latest_db_date, paste0(params$step_2a_analysis_date, "_", params$region_of_interest, "_completeDB.csv")))
 head(global_detailed_headers)
 
-#Trim columns 
+# Trim columns 
 global_detailed_headers <- data.frame(sequence = global_detailed_headers$sequence, merged_family_name = global_detailed_headers$merged_family_name, merged_genus_name = global_detailed_headers$merged_genus_name, merged_species_name = global_detailed_headers$merged_species_name)
 ncol(global_detailed_headers)
 
-#Join global_detailed_headers to data_global
+# Join global_detailed_headers to data_global
 data_global <- left_join(data_global, global_detailed_headers, by = "sequence")
 ```
 
+<br>
+
 ### Filter the data to only keep 100% matches
 ```{r}
-size <- dim(data_global) #number of rows and columns
+size <- dim(data_global) # number of rows and columns
 print(paste0("Number of rows in data: ", size[1]))
 print(paste0("Number of columns in data: ", size[2]))
 
@@ -88,6 +92,8 @@ data_global <- data_global %>%
  
 global_keep <- data_global[which(data_global[,best_id_col]==1),]
 ```
+
+<br>
 
 ### Filter the data to samples with at least `r params$min_read_count`
 ```{r}
@@ -119,6 +125,8 @@ keep_rows <- nrow(global_keep)
 print(paste0("Number of rows kept: ", keep_rows))
 ```
 
+<br>
+
 ## Generate summary statistics for publication
 #### Median, mean, and max for global counts
 ```{r}
@@ -135,12 +143,46 @@ print(paste0("The maximum depth for any one taxa in the global keep set: ", max(
 print(paste0("Total number of reads in the global keep subset: ", sum(global_keep$count)))
 ```
 
+<br>
+
 ## Make a table to represent the counts of each OTU in each sample
 ```{r}
 OTU_table <- global_keep[,grep("sample\\.", colnames(global_keep))]
 names(OTU_table) <- gsub(pattern = "sample.", replacement = "", x = names(OTU_table))
 rownames(OTU_table) <- sub("^", "P", rownames(OTU_table))
 ```
+
+<br>
+
+## Summary statistics for sample groupings
+```{r}
+# Calculate depth by sample
+global_depth <- colSums(OTU_table)
+
+# Clean up sample IDs - remove the "_Sx"
+depth_data <- tibble(
+  SampleID = names(global_depth),
+  global_depth = global_depth
+) %>%
+  mutate(SampleID = str_remove(SampleID, "_S\\d+$"))
+
+# Join with your data_samples
+combined_data <- data_samples %>%
+  left_join(depth_data, by = "SampleID")
+
+# Calculate stats by group
+global_stats <- combined_data %>%
+  group_by(.data[[params$minor_grouping]], .data[[params$major_grouping]]) %>%
+  summarize(
+    mean = mean(global_depth, na.rm = TRUE),
+    sd = sd(global_depth, na.rm = TRUE),
+    count = n(),
+    .groups = "drop"
+  )
+global_stats
+```
+
+<br>
 
 ## Calulate per-sample number of taxa
 ```{r}
@@ -153,6 +195,9 @@ per_sample_avg <- OTU_table %>%
   arrange(sample)
 print(per_sample_avg)
 ```
+
+<br> 
+
 ## Calculate mean, median, min, and max number of taxa
 ```{r}
 # mean number of taxa across samples
@@ -172,6 +217,8 @@ max_sample <- per_sample_avg$sample[which.max(per_sample_avg$num_taxa)]
 print(paste0("The maximum number of taxa in any one sample: ", max_taxa, " in ", max_sample))
 ```
 
+<br>
+
 ## Make a taxonomy table
 ```{r}
 tax_table <- global_keep[,-grep("sample\\.", colnames(global_keep))]
@@ -179,6 +226,8 @@ tax_table <- relocate(tax_table, id, definition, {{ best_id_col }}, {{ best_matc
 tax_table2 <- as.matrix(tax_table)
 rownames(tax_table2) <- sub("^", "P", rownames(tax_table2))
 ```
+
+<br>
 
 ## Do some cleaning before making the final Phyloseq object
 ```{r}
@@ -194,20 +243,15 @@ if (identical(sample_names(OTU), sample_names(samples))){
 }
 ```
 
-## Summarize sample sizes
-```{r warning=FALSE}
-local_nontrace_global_stats <- as.data.frame(cbind(tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), mean), tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), sd), tapply(local_nontrace_global_depth, paste(data_samples[[params$minor_grouping]], data_samples[[params$major_grouping]]), function(x) length(x))))
-
-colnames(local_nontrace_global_stats) <- c("mean","sd", "length")
-
-local_nontrace_global_stats
-```
+<br> 
 
 ## Create the final Phyloseq object
 ```{r}
 rds_file<- phyloseq(OTU, TAX, samples) 
 saveRDS(rds_file, file.path(input_path, paste0(params$project_code, params$region_of_interest, "_diet_global_", params$todaydate, ".rds")))
 ```
+
+<br>
 
 ## Copy over OTU, TAX, samples to "merged_runs"
 ```{r}
