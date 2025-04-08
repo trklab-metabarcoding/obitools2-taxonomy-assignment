@@ -560,7 +560,7 @@ print(glue("Total local + global notrace depth retained: ", round(sum(local_nont
 
 <br>
 
-## Summarize sample sizes
+## Summary statistics for sample groupings
 ```{r}
 # Clean up sample names by removing "sample. and _Sx"
 depth_data <- tibble(

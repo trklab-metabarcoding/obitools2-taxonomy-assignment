@@ -154,7 +154,7 @@ rownames(OTU_table) <- sub("^", "P", rownames(OTU_table))
 
 <br>
 
-## Summarize sample sizes
+## Summary statistics for sample groupings
 ```{r}
 # Calculate depth by sample
 global_depth <- colSums(OTU_table)
