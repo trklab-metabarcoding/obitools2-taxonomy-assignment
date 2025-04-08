@@ -22,7 +22,7 @@ params:
     region_of_interest: "P6"
     latest_db_date: "20241125"
     step_2a_analysis_date: "20241227" # look in the `latest_db_date` folder and get the date associated with the `_completeDB.csv` file
-    step_3a_analysis_date: "20241123" # look in tkartzin > projects > project_code > merged_runs > date on folder YYYYMMDD_username
+    step_3a_analysis_date: "20240502" # look in tkartzin > projects > project_code > merged_runs > date on folder YYYYMMDD_username
     step_3b_analysis_date: "20240502" # if running on the same day as Step 3, this will be `todaydate`, otherwise enter the date when you ran Step 3b
     metadata_file: "test_phyloseq_metadata.csv"
     percent_match: 1 # value between 0-1; percent match between reference sequence and your sequence
@@ -44,7 +44,7 @@ pacman::p_load(knitr, here, tidyr, dplyr, vegan, glue, scales, datawizard) # thi
 
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-BiocManager::install("phyloseq")
+BiocManager::install("phyloseq", ask = FALSE)
 
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
@@ -232,11 +232,11 @@ rownames(tax_table2) <- sub("^", "P", rownames(tax_table2))
 ## Do some cleaning before making the final Phyloseq object
 ```{r}
 rownames(data_samples) <- data_samples$SampleID
-samples <- sample_data(data_samples)
-OTU <- otu_table(OTU_table, taxa_are_rows = TRUE)
-TAX <- tax_table(tax_table2)
+samples <- phyloseq::sample_data(data_samples)
+OTU <- phyloseq::otu_table(OTU_table, taxa_are_rows = TRUE)
+TAX <- phyloseq::tax_table(tax_table2)
 
-if (identical(sample_names(OTU), sample_names(samples))){
+if (identical(phyloseq::sample_names(OTU), phyloseq::sample_names(samples))){
   print("Your samples are in the right order. Proceed with making your final RDS file!")
 } else {
   print("Something is out of order. Make sure the samples in your metadata file match the order in your OTU. Please fix and rerun this notebook.")
@@ -247,7 +247,7 @@ if (identical(sample_names(OTU), sample_names(samples))){
 
 ## Create the final Phyloseq object
 ```{r}
-rds_file<- phyloseq(OTU, TAX, samples) 
+rds_file<- phyloseq::phyloseq(OTU, TAX, samples) 
 saveRDS(rds_file, file.path(input_path, paste0(params$project_code, params$region_of_interest, "_diet_global_", params$todaydate, ".rds")))
 ```
 

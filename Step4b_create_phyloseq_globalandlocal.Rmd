@@ -50,7 +50,7 @@ pacman::p_load(knitr, here, tidyr, dplyr, vegan, vegetarian, scales, datawizard,
 
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-BiocManager::install("phyloseq")
+BiocManager::install("phyloseq", ask = FALSE)
 
 here::i_am("./Step4a_create_phyloseq_global.Rmd")
 ```
@@ -640,12 +640,12 @@ print(paste0("The maximum number of taxa in any one sample: ", max_taxa, " in ",
 
 Build the Phyloseq diet object, rarefy, and export the rarefied tables for easy loading in future.
 ```{r}
-OTU = otu_table(as.matrix(OTU_table), taxa_are_rows = TRUE)
-TAX = tax_table(as.matrix(Taxa_table))
-samples = sample_data(data_samples)
+OTU = phyloseq::otu_table(as.matrix(OTU_table), taxa_are_rows = TRUE)
+TAX = phyloseq::tax_table(as.matrix(Taxa_table))
+samples = phyloseq::sample_data(data_samples)
 
 filename <- glue({params$project_code}, "_diet_local_global_", {params$todaydate}, ".rds")
-phyloseq_object <- phyloseq(OTU, TAX, samples)
+phyloseq_object <- phyloseq::phyloseq(OTU, TAX, samples)
 phyloseq_object
 
 saveRDS(phyloseq_object, filename)
