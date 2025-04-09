@@ -63,11 +63,43 @@ duplicates <- get_dupes(metadata, SampleID)
 ```
 
 ```{r}
-file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_run_name, params$step_1_analysis_date), recursive=T, pattern=("*.fastq"), full.names=T)
+file_list <- list.files(path=file.path(params$data_path, params$project_code, params$seq_run_name, params$step_1_analysis_date, "/id_data"),  recursive=T, pattern=("*_id.fastq"), full.names=T)
 
-matching_files <- file_list[sapply(file_list, function(file) {
-  any(grepl(paste(metadata$SampleID, collapse = "|"), basename(file)))
-  })]
+# Match exact sample IDs between filenames and metadata
+pattern <- paste0("^(", paste(metadata$SampleID, collapse = "|"), ")_")
+matching_files <- file_list[str_detect(basename(file_list), pattern)]
+```
+
+#### Check for any extra sample IDs in filenames list
+In this block, we want to make sure that the number of samples being pulled over is the same length as those in the metadata file. We expect the messages to say that all the metadata IDs are in the file list and the basenames in the file list are in the metadata. If not, something is mismatched and the code won't run.
+```{r}
+# Extract the basename from each file path
+file_basenames <- basename(matching_files)
+
+# Extract the SampleID portion from each filename
+# This pattern extracts everything before "_id.fastq"
+file_sample_ids <- sub("^(.+?)_id\\.fastq.*", "\\1", file_basenames)
+
+# Find which sample IDs from files are not in the metadata
+missing_from_metadata <- setdiff(file_sample_ids, metadata$SampleID)
+
+# Find which sample IDs from metadata are not in the files
+missing_from_files <- setdiff(metadata$SampleID, file_sample_ids)
+
+# Print results
+if(length(missing_from_metadata) > 0) {
+  cat("Sample IDs in files but not in metadata:\n")
+  print(missing_from_metadata)
+} else {
+  cat("All file sample IDs are in metadata.\n")
+}
+
+if(length(missing_from_files) > 0) {
+  cat("Sample IDs in metadata but not in files:\n")
+  print(missing_from_files)
+} else {
+  cat("All metadata sample IDs are in files.\n")
+}
 ```
 
 #### Collect all the final results from each sequencing run
