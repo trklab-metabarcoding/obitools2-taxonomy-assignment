@@ -102,6 +102,11 @@ obitab -o ${DATE}_global_alluniq.clean.tag.ann.fasta > ${DATE}_global_alluniq.cl
 
 #### Copy over your notebook to the shared lab directory on Oscar.
 
+## Print params
+```{r}
+params
+```
+
 **Note: Save this notebook first so any results are recorded before copying. Then run this final chunk.**
 ```{r}
 file.copy("./Step3b_taxonomy_assignment_global.nb.html", file.path(glue("{output_path}/Step3b_taxonomy_assignment_global.nb.html")), overwrite = TRUE)
