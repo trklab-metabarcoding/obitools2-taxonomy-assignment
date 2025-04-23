@@ -253,6 +253,13 @@ saveRDS(rds_file, file.path(input_path, paste0(params$project_code, params$regio
 
 <br>
 
+## Print params
+```{r}
+params
+```
+
+<br>
+
 ## Copy over OTU, TAX, samples to "merged_runs"
 ```{r}
 output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3b_analysis_date, params$user))
