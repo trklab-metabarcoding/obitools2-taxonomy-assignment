@@ -103,6 +103,10 @@ obitab -o ${DATE}_local_alluniq.clean.tag.ann.fasta > ${DATE}_local_alluniq.clea
 
 #### Copy over your notebook to the shared lab directory on Oscar.
 
+## Print params
+```{r}
+params
+```
 **Note: Save this notebook first so any results are recorded before copying. Then run this final chunk.**
 ```{r}
 file.copy("./Step3c_taxonomy_assignment_local.nb.html", file.path(glue("{output_path}/Step3c_taxonomy_assignment_local.nb.html")), overwrite = TRUE)
