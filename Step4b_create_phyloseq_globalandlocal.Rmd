@@ -652,4 +652,10 @@ saveRDS(phyloseq_object, filename)
 
 # WE HAVE A NEW PHYLOSEQ OBJECT!!!
 ```
+<br>
 
+## Print params
+```{r}
+params
+```
+### TODO: Copy over the html notebook
