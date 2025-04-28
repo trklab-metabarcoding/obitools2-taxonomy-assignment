@@ -59,7 +59,6 @@ input_path <- file.path(params$data_path, params$project_code, "merged_runs", sp
 data_global <- read.csv(file.path(input_path, sprintf("%s_global_alluniq.clean.tag.ann.tab", params$step_3b_analysis_date)), sep="\t", header=TRUE)
 
 data_samples <- read.csv(params$metadata_file)
-data_samples <- data_samples[order(data_samples$SampleID), ]
 ```
 
 This block of code will read in the 'completeDB.csv' output of step 2a, trim this file to sequence, merged_family, merged_genus, and merged_species columns, and join this file to 'data_global' by sequence.
@@ -84,8 +83,8 @@ size <- dim(data_global) # number of rows and columns
 print(paste0("Number of rows in data: ", size[1]))
 print(paste0("Number of columns in data: ", size[2]))
 
-best_id_col <- find_columns(data_global, starts_with("best_identity"))
-best_match_col <- find_columns(data_global, starts_with("best_match"))
+best_id_col <- extract_column_names(data_global, starts_with("best_identity"))
+best_match_col <- extract_column_names(data_global, starts_with("best_match"))
 
 data_global <- data_global %>% 
   select(-contains("obiclean_status"))
@@ -228,6 +227,29 @@ rownames(tax_table2) <- sub("^", "P", rownames(tax_table2))
 ```
 
 <br>
+
+## Check sample order in metadata and OTU tables
+```{r}
+# View the names of SampleIDs in the metadata and OTU table data frames
+names(OTU_table)
+data_samples$SampleID
+```
+
+```{r}
+# Check for differences between the two lists 
+setdiff(names(OTU_table), data_samples$SampleID) # This tells us which samples are present in first set that aren't present in second set - if you get output here, we need to clean up names 
+setdiff(data_samples$SampleID, names(OTU_table)) # This tells us which samples are present in second set that aren't present in first set - if you get output here, we need to clean up names 
+
+# These two lines will remove any 'lab' SampleIDs that may have the "_S##" format from the sequencing machine
+names(OTU_table) <- str_replace(names(OTU_table), "_.*$", "") 
+data_samples$SampleID <- str_replace(data_samples$SampleID, "_.*$", "") 
+
+# Check to see that name issues have been fixed (if you get output here besides 'character(0)', you have not successfully fixed names)
+setdiff(names(OTU_table), data_samples$SampleID) 
+
+# Set the order of SampleIDs in metadata file to match the order of SampleIDs in OTU table. Open both files in 'Environment' pane to view and check both data frames.
+data_samples <- data_samples[order(match(data_samples$SampleID, names(OTU_table))), ]
+```
 
 ## Do some cleaning before making the final Phyloseq object
 ```{r}
