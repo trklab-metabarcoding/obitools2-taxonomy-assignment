@@ -50,7 +50,7 @@ The date for the output path will correspond to this analysis date.
 output_path = file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3a_analysis_date, params$user))
 dir.create(output_path)
 
-Sys.setenv(output_path=output_path)
+Sys.setenv(output_path=output_path) 
 ```
 
 #### Make a list of files we want to process
@@ -188,7 +188,7 @@ obicount ${date}_alluniq.clean.fasta --without-progress-bar
 
 #### Calculate mean and range of sample depths
 ```{r}
- tabseqs <- read_tsv(list.files(output_path, pattern = "_alluniq.clean.tab", full.names=T))
+tabseqs <- read_tsv(list.files(output_path, pattern = "_alluniq.clean.tab", full.names=T))
 sample_depth <- colSums(tabseqs[,grep("^sample:", colnames(tabseqs))])
 ```
 
