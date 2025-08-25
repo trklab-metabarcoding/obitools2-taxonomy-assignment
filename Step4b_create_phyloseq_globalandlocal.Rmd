@@ -663,4 +663,19 @@ saveRDS(phyloseq_object, filename)
 ```{r}
 params
 ```
-### TODO: Copy over the html notebook
+
+## Copy over OTU, TAX, samples to "merged_runs"
+```{r}
+output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3b_analysis_date, params$user))
+
+write.csv(OTU_table, "OTU_table.csv")
+file.copy("./OTU_table.csv", file.path(glue("{output_path}/OTU_table.csv")))
+write.csv(tax_table2, "TAX_table.csv")
+file.copy("./TAX_table.csv", file.path(glue("{output_path}/TAX_table.csv")))
+write.csv(data_samples, "./SAMPLES_table.csv")
+file.copy("./SAMPLES_table.csv", file.path(glue("{output_path}/SAMPLES_table.csv")))
+
+file.copy(phyloseq_object, file.path(paste0("{output_path}/", filename)), overwrite = TRUE)
+
+file.copy("./Step4b_create_phyloseq_globalandlocal.nb.html", file.path(glue("{output_path}/Step4b_create_phyloseq_globalandlocal.nb.html")), overwrite = TRUE)
+```
