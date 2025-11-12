@@ -46,6 +46,10 @@ This notebook will use your data with taxonomy assigned from the latest global r
 knitr::opts_chunk$set(echo = TRUE)
 
 if (!require("pacman")) install.packages("pacman")
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("phyloseq", ask = FALSE)
+
 pacman::p_load(knitr, here, tidyr, dplyr, phyloseq, vegan, vegetarian, scales, datawizard, ggplot2, ggrepel, glue, textshape, stringr)
 here::i_am("./Step4b_create_phyloseq_globalandlocal.Rmd")
 ```
