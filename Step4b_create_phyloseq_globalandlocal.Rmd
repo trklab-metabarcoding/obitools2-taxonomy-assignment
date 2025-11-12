@@ -121,8 +121,8 @@ size <- dim(data_local) # number of rows and columns
 print(paste0("Number of rows in local data: ", size[1]))
 print(paste0("Number of columns in local data: ", size[2]))
 
-best_id_col_local <- find_columns(data_local, starts_with("best_identity"))
-best_match_col_local <- find_columns(data_local, starts_with("best_match"))
+best_id_col_local <- extract_column_names(data_local, starts_with("best_identity"))
+best_match_col_local <- extract_column_names(data_local, starts_with("best_match"))
 
 data_local <- data_local %>% 
   select(-contains("obiclean_status"))
@@ -629,6 +629,31 @@ print(paste0("The minimum number of taxa in any one sample: ", min_taxa, " in ",
 max_taxa <- max(per_sample_avg$num_taxa)
 max_sample <- per_sample_avg$sample[which.max(per_sample_avg$num_taxa)]
 print(paste0("The maximum number of taxa in any one sample: ", max_taxa, " in ", max_sample))
+```
+
+<br>
+
+## Check sample order in metadata and OTU tables
+```{r}
+# View the names of SampleIDs in the metadata and OTU table data frames
+names(OTU_table)
+data_samples$SampleID
+```
+
+```{r}
+# Check for differences between the two lists 
+setdiff(names(OTU_table), data_samples$SampleID) # This tells us which samples are present in first set that aren't present in second set - if you get output here, we need to clean up names 
+setdiff(data_samples$SampleID, names(OTU_table)) # This tells us which samples are present in second set that aren't present in first set - if you get output here, we need to clean up names 
+
+# These two lines will remove any 'lab' SampleIDs that may have the "_S##" format from the sequencing machine
+names(OTU_table) <- str_replace(names(OTU_table), "_.*$", "") 
+data_samples$SampleID <- str_replace(data_samples$SampleID, "_.*$", "") 
+
+# Check to see that name issues have been fixed (if you get output here besides 'character(0)', you have not successfully fixed names)
+setdiff(names(OTU_table), data_samples$SampleID) 
+
+# Set the order of SampleIDs in metadata file to match the order of SampleIDs in OTU table. Open both files in 'Environment' pane to view and check both data frames.
+data_samples <- data_samples[order(match(data_samples$SampleID, names(OTU_table))), ]
 ```
 
 <br>
