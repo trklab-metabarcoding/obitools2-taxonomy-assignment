@@ -262,7 +262,7 @@ params
 
 ## Copy over OTU, TAX, samples to "merged_runs"
 ```{r}
-output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3b_analysis_date, params$user))
+output_path <- file.path(params$data_path, params$project_code, "merged_runs", sprintf("%s_%s", params$step_3a_analysis_date, params$user))
 
 write.csv(OTU_table, "OTU_table.csv")
 file.copy("./OTU_table.csv", file.path(glue("{output_path}/OTU_table.csv")))
