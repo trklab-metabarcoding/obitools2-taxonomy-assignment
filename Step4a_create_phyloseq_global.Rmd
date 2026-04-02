@@ -100,7 +100,7 @@ global_keep <- data_global[which(data_global[,best_id_col]==1),]
 filter_low_count_samples <- function(df) {
   # calc read count sums for sample columns
   sample_sums <- df %>% 
-    select(starts_with("sample.")) %>% 
+    select(starts_with(c("sample.", "sample_marker."))) %>% 
     summarise(across(everything(), \(x) sum(x, na.rm = TRUE)))
   
   # get names of columns to keep (those with sums >= `min_read_count`)
@@ -110,7 +110,7 @@ filter_low_count_samples <- function(df) {
     pull(column)
   
   # get all non-sample columns to keep
-  non_sample_cols <- names(df)[!grepl("^sample\\.", names(df))]
+  non_sample_cols <- names(df)[!grepl("^sample\\.|^sample_marker", names(df))]
   
   # return the filtered df with only samples passing `min_read_count`
   df %>% select(all_of(non_sample_cols), any_of(columns_to_keep))
@@ -147,8 +147,8 @@ print(paste0("Total number of reads in the global keep subset: ", sum(global_kee
 
 ## Make a table to represent the counts of each OTU in each sample
 ```{r}
-OTU_table <- global_keep[,grep("sample\\.", colnames(global_keep))]
-names(OTU_table) <- gsub(pattern = "sample.", replacement = "", x = names(OTU_table))
+OTU_table <- global_keep[,grep("sample\\|sample_marker\\", colnames(global_keep))]
+names(OTU_table) <- gsub(pattern = "sample.|sample_marker.", replacement = "", x = names(OTU_table))
 rownames(OTU_table) <- sub("^", "P", rownames(OTU_table))
 ```
 
@@ -221,7 +221,7 @@ print(paste0("The maximum number of taxa in any one sample: ", max_taxa, " in ",
 
 ## Make a taxonomy table
 ```{r}
-tax_table <- global_keep[,-grep("sample\\.", colnames(global_keep))]
+tax_table <- global_keep[,-grep("sample\\|sample_marker", colnames(global_keep))]
 tax_table <- relocate(tax_table, id, definition, {{ best_id_col }}, {{ best_match_col }}, count, .after = last_col())
 tax_table2 <- as.matrix(tax_table)
 rownames(tax_table2) <- sub("^", "P", rownames(tax_table2))
