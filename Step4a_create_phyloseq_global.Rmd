@@ -121,6 +121,8 @@ global_keep <- filter_low_count_samples(global_keep)
 
 global_keep$scientific_name <- make.unique(as.character(global_keep$scientific_name))
 
+##TODO (TJD): Update the metadata (data_samples) to remove rows that get filtered out at this step.
+
 keep_rows <- nrow(global_keep)
 print(paste0("Number of rows kept: ", keep_rows))
 ```
